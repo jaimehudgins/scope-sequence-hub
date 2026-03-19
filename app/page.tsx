@@ -18,10 +18,19 @@ import DisruptionModal from "@/components/DisruptionModal";
 import Toast from "@/components/Toast";
 import LessonCard from "@/components/LessonCard";
 import { format } from "date-fns";
+import { isValidMeetingDate } from "@/utils/cascadeUtils";
 
 export default function Home() {
-  const { lessons, setLessons, addToast, currentRole, courses, pushSnapshot } =
-    useCalendarContext();
+  const {
+    lessons,
+    setLessons,
+    addToast,
+    currentRole,
+    courses,
+    pushSnapshot,
+    nonInstructionalDays,
+    scheduleOverrides,
+  } = useCalendarContext();
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -52,6 +61,37 @@ export default function Home() {
     if (conflict) {
       addToast(
         `⚠️ ${courses[lesson.courseId]?.name || "Course"} already has a lesson on this date`,
+      );
+      return;
+    }
+
+    // Check if the target date is a valid meeting day for this course
+    const course = courses[lesson.courseId];
+    if (
+      course &&
+      !isValidMeetingDate(
+        targetDate,
+        course,
+        nonInstructionalDays,
+        scheduleOverrides,
+      )
+    ) {
+      const dayNames = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const targetDayName =
+        dayNames[new Date(targetDate + "T12:00:00").getDay()];
+      const meetingDayNames = course.meetingDays
+        .map((d) => dayNames[d])
+        .join(", ");
+      addToast(
+        `⚠️ ${course.name} doesn't meet on ${targetDayName}s. This course meets: ${meetingDayNames}`,
       );
       return;
     }

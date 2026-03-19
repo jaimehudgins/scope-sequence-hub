@@ -52,6 +52,12 @@ export type NonInstructionalDay = {
     | "other";
 };
 
+export type ScheduleOverride = {
+  date: string; // The actual calendar date, e.g. "2026-03-20"
+  runsAsDayOfWeek: number; // Which day-of-week schedule to follow (0=Sun..6=Sat)
+  label?: string; // e.g. "Wed schedule"
+};
+
 export type ViewMode = "month" | "week";
 
 export type CalendarSnapshot = {
@@ -72,7 +78,10 @@ export type CascadePreview = {
   affectedCourseIds: string[];
 };
 
-export type DisruptionModalMode = "cancel-day" | "insert-school-created";
+export type DisruptionModalMode =
+  | "cancel-day"
+  | "insert-school-created"
+  | "schedule-override";
 
 export type DisruptionModalState = {
   isOpen: boolean;

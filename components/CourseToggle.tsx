@@ -89,7 +89,7 @@ export default function CourseToggle() {
                   buttonRefs.current[id] = el;
                 }}
                 onClick={(e) => openPopover(id, e)}
-                className="w-[22px] h-[22px] rounded-md flex items-center justify-center text-[11px] text-text-muted hover:bg-bg hover:text-text transition-all cursor-pointer border border-transparent hover:border-border"
+                className="w-[30px] h-[30px] rounded-md flex items-center justify-center text-[17px] text-text-muted hover:bg-bg hover:text-text transition-all cursor-pointer border border-transparent hover:border-border"
                 title={`Configure ${course.name} schedule`}
               >
                 ⚙

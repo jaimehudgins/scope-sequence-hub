@@ -2,6 +2,7 @@ import type {
   Course,
   Lesson,
   NonInstructionalDay,
+  ScheduleOverride,
   CascadeShift,
   CascadePreview,
 } from "@/types";
@@ -39,16 +40,38 @@ export function isWeekend(date: Date): boolean {
  */
 export function isNonInstructionalDate(
   dateStr: string,
-  nonInstructionalDays: NonInstructionalDay[]
+  nonInstructionalDays: NonInstructionalDay[],
 ): boolean {
   return nonInstructionalDays.some((nid) => nid.date === dateStr);
 }
 
 /**
+ * Returns the effective day-of-week for a given date, considering schedule overrides.
+ * If there's an override, returns the runsAsDayOfWeek; otherwise returns the actual day-of-week.
+ */
+export function getEffectiveDayOfWeek(
+  date: Date,
+  dateStr: string,
+  scheduleOverrides: ScheduleOverride[] = [],
+): number {
+  const override = scheduleOverrides.find((o) => o.date === dateStr);
+  if (override) {
+    return override.runsAsDayOfWeek;
+  }
+  return date.getDay();
+}
+
+/**
  * Returns true if the date's day-of-week is one of the course's meeting days.
  */
-export function isMeetingDay(date: Date, course: Course): boolean {
-  return course.meetingDays.includes(date.getDay());
+export function isMeetingDay(
+  date: Date,
+  course: Course,
+  scheduleOverrides: ScheduleOverride[] = [],
+): boolean {
+  const dateStr = dateToString(date);
+  const effectiveDay = getEffectiveDayOfWeek(date, dateStr, scheduleOverrides);
+  return course.meetingDays.includes(effectiveDay);
 }
 
 /**
@@ -58,11 +81,12 @@ export function isMeetingDay(date: Date, course: Course): boolean {
 export function isValidMeetingDate(
   dateStr: string,
   course: Course,
-  nonInstructionalDays: NonInstructionalDay[]
+  nonInstructionalDays: NonInstructionalDay[],
+  scheduleOverrides: ScheduleOverride[] = [],
 ): boolean {
   const date = stringToDate(dateStr);
   return (
-    isMeetingDay(date, course) &&
+    isMeetingDay(date, course, scheduleOverrides) &&
     !isWeekend(date) &&
     !isNonInstructionalDate(dateStr, nonInstructionalDays)
   );
@@ -78,7 +102,8 @@ export function getNextMeetingDate(
   fromDateStr: string,
   course: Course,
   nonInstructionalDays: NonInstructionalDay[],
-  direction: "forward" | "backward" = "forward"
+  direction: "forward" | "backward" = "forward",
+  scheduleOverrides: ScheduleOverride[] = [],
 ): string | null {
   const schoolYearEndStr = dateToString(SCHOOL_YEAR_END);
   const delta = direction === "forward" ? 1 : -1;
@@ -93,7 +118,14 @@ export function getNextMeetingDate(
       return null;
     }
 
-    if (isValidMeetingDate(currentStr, course, nonInstructionalDays)) {
+    if (
+      isValidMeetingDate(
+        currentStr,
+        course,
+        nonInstructionalDays,
+        scheduleOverrides,
+      )
+    ) {
       return currentStr;
     }
   }
@@ -108,16 +140,22 @@ export function getNextMeetingDate(
 export function getCoursesOnDate(
   dateStr: string,
   courses: Record<string, Course>,
-  nonInstructionalDays: NonInstructionalDay[]
+  nonInstructionalDays: NonInstructionalDay[],
+  scheduleOverrides: ScheduleOverride[] = [],
 ): Course[] {
   const date = stringToDate(dateStr);
 
   // If it's a weekend or non-instructional day, no courses meet
-  if (isWeekend(date) || isNonInstructionalDate(dateStr, nonInstructionalDays)) {
+  if (
+    isWeekend(date) ||
+    isNonInstructionalDate(dateStr, nonInstructionalDays)
+  ) {
     return [];
   }
 
-  return Object.values(courses).filter((course) => isMeetingDay(date, course));
+  return Object.values(courses).filter((course) =>
+    isMeetingDay(date, course, scheduleOverrides),
+  );
 }
 
 /**
@@ -133,7 +171,8 @@ export function buildCascadePreview(
   courseId: string,
   fromDate: string,
   course: Course,
-  nonInstructionalDays: NonInstructionalDay[]
+  nonInstructionalDays: NonInstructionalDay[],
+  scheduleOverrides: ScheduleOverride[] = [],
 ): CascadePreview {
   // 1. Filter to lessons for this course, scheduled on or after fromDate, sorted ascending
   const affected = lessons
@@ -141,7 +180,7 @@ export function buildCascadePreview(
       (l) =>
         l.courseId === courseId &&
         l.scheduledDate !== null &&
-        l.scheduledDate >= fromDate
+        l.scheduledDate >= fromDate,
     )
     .sort((a, b) => a.scheduledDate!.localeCompare(b.scheduledDate!));
 
@@ -156,7 +195,8 @@ export function buildCascadePreview(
       lastAssignedDate,
       course,
       nonInstructionalDays,
-      "forward"
+      "forward",
+      scheduleOverrides,
     );
 
     if (nextDate === null) {
@@ -195,7 +235,8 @@ export function buildMultiCourseCascadePreview(
   courseIds: string[],
   fromDate: string,
   courses: Record<string, Course>,
-  nonInstructionalDays: NonInstructionalDay[]
+  nonInstructionalDays: NonInstructionalDay[],
+  scheduleOverrides: ScheduleOverride[] = [],
 ): CascadePreview {
   const allShifts: CascadeShift[] = [];
   const allOverflow: Lesson[] = [];
@@ -210,7 +251,8 @@ export function buildMultiCourseCascadePreview(
       courseId,
       fromDate,
       course,
-      nonInstructionalDays
+      nonInstructionalDays,
+      scheduleOverrides,
     );
 
     allShifts.push(...preview.shifts);
@@ -235,7 +277,7 @@ export function buildMultiCourseCascadePreview(
 export function executeCascade(
   allLessons: Lesson[],
   preview: CascadePreview,
-  unscheduleIds: Set<string>
+  unscheduleIds: Set<string>,
 ): Lesson[] {
   // Build a map: lesson ID → new date from shifts
   const shiftMap = new Map<string, string | null>();
@@ -264,14 +306,14 @@ export function countAffectedLessonsInRange(
   lessons: Lesson[],
   courseId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
 ): Lesson[] {
   return lessons.filter(
     (l) =>
       l.courseId === courseId &&
       l.scheduledDate !== null &&
       l.scheduledDate >= startDate &&
-      l.scheduledDate <= endDate
+      l.scheduledDate <= endDate,
   );
 }
 
@@ -292,7 +334,8 @@ export function buildMultiDayCascadePreview(
   startDate: string,
   endDate: string,
   course: Course,
-  nonInstructionalDays: NonInstructionalDay[]
+  nonInstructionalDays: NonInstructionalDay[],
+  scheduleOverrides: ScheduleOverride[] = [],
 ): CascadePreview {
   // 1. Count lost meeting days in the disruption range
   //    (not strictly needed for the cascade logic, but useful context)
@@ -304,7 +347,14 @@ export function buildMultiDayCascadePreview(
   const cursor = new Date(rangeStart);
   while (cursor <= rangeEnd) {
     const cursorStr = dateToString(cursor);
-    if (isValidMeetingDate(cursorStr, course, nonInstructionalDays)) {
+    if (
+      isValidMeetingDate(
+        cursorStr,
+        course,
+        nonInstructionalDays,
+        scheduleOverrides,
+      )
+    ) {
       _lostMeetingDays++;
     }
     cursor.setDate(cursor.getDate() + 1);
@@ -316,7 +366,7 @@ export function buildMultiDayCascadePreview(
       (l) =>
         l.courseId === courseId &&
         l.scheduledDate !== null &&
-        l.scheduledDate >= startDate
+        l.scheduledDate >= startDate,
     )
     .sort((a, b) => a.scheduledDate!.localeCompare(b.scheduledDate!));
 
@@ -333,7 +383,8 @@ export function buildMultiDayCascadePreview(
       lastAssignedDate,
       course,
       nonInstructionalDays,
-      "forward"
+      "forward",
+      scheduleOverrides,
     );
 
     if (nextDate === null) {

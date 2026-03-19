@@ -10,6 +10,7 @@ import React, {
 import {
   Lesson,
   NonInstructionalDay,
+  ScheduleOverride,
   Role,
   ViewMode,
   CalendarSnapshot,
@@ -39,6 +40,10 @@ type CalendarContextType = {
   setLessons: (lessons: Lesson[]) => void;
   nonInstructionalDays: NonInstructionalDay[];
   setNonInstructionalDays: (days: NonInstructionalDay[]) => void;
+  // Schedule overrides
+  scheduleOverrides: ScheduleOverride[];
+  addScheduleOverride: (override: ScheduleOverride) => void;
+  removeScheduleOverride: (date: string) => void;
   selectedLessonId: string | null;
   setSelectedLessonId: (id: string | null) => void;
   toasts: ToastMessage[];
@@ -88,6 +93,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const [lessons, setLessons] = useState<Lesson[]>(mockLessons);
   const [nonInstructionalDays, setNonInstructionalDays] =
     useState<NonInstructionalDay[]>(mockHolidays);
+  const [scheduleOverrides, setScheduleOverrides] = useState<
+    ScheduleOverride[]
+  >([]);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -221,6 +229,19 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setDisruptionModal(null);
   }, []);
 
+  // --- Schedule overrides ---
+  const addScheduleOverride = useCallback((override: ScheduleOverride) => {
+    setScheduleOverrides((prev) => {
+      // Replace if same date exists, otherwise add
+      const filtered = prev.filter((o) => o.date !== override.date);
+      return [...filtered, override];
+    });
+  }, []);
+
+  const removeScheduleOverride = useCallback((date: string) => {
+    setScheduleOverrides((prev) => prev.filter((o) => o.date !== date));
+  }, []);
+
   return (
     <CalendarContext.Provider
       value={{
@@ -239,6 +260,10 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         setLessons,
         nonInstructionalDays,
         setNonInstructionalDays,
+        // Schedule overrides
+        scheduleOverrides,
+        addScheduleOverride,
+        removeScheduleOverride,
         selectedLessonId,
         setSelectedLessonId,
         toasts,

@@ -36,23 +36,29 @@ function DraggableLessonCard({
   );
 }
 
-function MeetingDayDots({ dateStr }: { dateStr: string }) {
-  const { courses, activeCourses, nonInstructionalDays } = useCalendarContext();
+function MeetingDayBars({ dateStr }: { dateStr: string }) {
+  const { courses, activeCourses, nonInstructionalDays, scheduleOverrides } =
+    useCalendarContext();
 
   const meetingCourses = Object.values(courses).filter(
     (course) =>
       activeCourses.has(course.id) &&
-      isValidMeetingDate(dateStr, course, nonInstructionalDays),
+      isValidMeetingDate(
+        dateStr,
+        course,
+        nonInstructionalDays,
+        scheduleOverrides,
+      ),
   );
 
   if (meetingCourses.length === 0) return null;
 
   return (
-    <div className="flex gap-[3px] mt-[1px]">
+    <div className="absolute top-0 left-0 right-0 flex flex-col">
       {meetingCourses.map((course) => (
-        <span
+        <div
           key={course.id}
-          className="w-[5px] h-[5px] rounded-full flex-shrink-0"
+          className="w-full h-[3px] opacity-70"
           style={{ backgroundColor: course.color }}
           title={`${course.name} meets this day`}
         />
@@ -102,6 +108,7 @@ export default function CalendarView() {
     nonInstructionalDays,
     courses,
     currentRole,
+    scheduleOverrides,
   } = useCalendarContext();
 
   const today = new Date();
@@ -125,8 +132,13 @@ export default function CalendarView() {
     return Object.values(courses).some(
       (course) =>
         activeCourses.has(course.id) &&
-        isValidMeetingDate(ds, course, nonInstructionalDays),
+        isValidMeetingDate(ds, course, nonInstructionalDays, scheduleOverrides),
     );
+  };
+
+  // Find schedule override for a date
+  const getOverrideForDate = (ds: string) => {
+    return scheduleOverrides.find((o) => o.date === ds) || null;
   };
 
   if (currentView === "month") {
@@ -191,6 +203,7 @@ export default function CalendarView() {
               (d) => d.date === ds,
             );
             const isMeeting = hasMeetingDay(ds, isWeekend);
+            const override = getOverrideForDate(ds);
 
             const dayLessons = lessons.filter(
               (l) => l.scheduledDate === ds && activeCourses.has(l.courseId),
@@ -212,6 +225,7 @@ export default function CalendarView() {
                 isWeekend={isWeekend}
                 className={cellClasses}
               >
+                <MeetingDayBars dateStr={ds} />
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-[4px]">
                     <div
@@ -225,7 +239,6 @@ export default function CalendarView() {
                     >
                       {day}
                     </div>
-                    <MeetingDayDots dateStr={ds} />
                   </div>
                   {/* Day action menu - admin only, not on weekends or non-instructional days */}
                   {currentRole === "admin" &&
@@ -236,6 +249,11 @@ export default function CalendarView() {
                 {nonInstructionalDay && (
                   <div className="non-instructional-label">
                     {nonInstructionalDay.label}
+                  </div>
+                )}
+                {override && (
+                  <div className="text-[9px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-[5px] py-[1px] rounded w-fit mb-[2px]">
+                    🔄 {override.label}
                   </div>
                 )}
                 <div className="flex flex-col gap-[2px] flex-1">
@@ -276,24 +294,21 @@ export default function CalendarView() {
           return (
             <div
               key={d.toISOString()}
-              className={`bg-surface p-[10px] px-3 text-center border-b border-border ${
+              className={`bg-surface p-[10px] px-3 text-center border-b border-border relative ${
                 isTodayCell ? "bg-today-bg" : isMeeting ? "bg-[#f5faf5]" : ""
               }`}
             >
               <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted">
                 {dayNamesShort[d.getDay()]}
               </div>
-              <div className="flex items-center justify-center gap-1">
-                <div
-                  className={`text-[18px] font-semibold text-text mt-[2px] ${
-                    isTodayCell
-                      ? "bg-today-border text-white w-[30px] h-[30px] rounded-full inline-flex items-center justify-center"
-                      : ""
-                  }`}
-                >
-                  {d.getDate()}
-                </div>
-                <MeetingDayDots dateStr={ds} />
+              <div
+                className={`text-[18px] font-semibold text-text mt-[2px] ${
+                  isTodayCell
+                    ? "bg-today-border text-white w-[30px] h-[30px] rounded-full inline-flex items-center justify-center"
+                    : ""
+                }`}
+              >
+                {d.getDate()}
               </div>
             </div>
           );
@@ -307,6 +322,7 @@ export default function CalendarView() {
           const dayLessons = lessons.filter(
             (l) => l.scheduledDate === ds && activeCourses.has(l.courseId),
           );
+          const override = getOverrideForDate(ds);
 
           let cellClasses =
             "bg-surface min-h-[400px] p-2 flex flex-col gap-1 transition-all relative group";
@@ -319,6 +335,7 @@ export default function CalendarView() {
               isWeekend={false}
               className={cellClasses}
             >
+              <MeetingDayBars dateStr={ds} />
               <div className="flex items-center justify-between mb-1">
                 <div />
                 {currentRole === "admin" && !nonInstructionalDay && (
@@ -328,6 +345,11 @@ export default function CalendarView() {
               {nonInstructionalDay && (
                 <div className="non-instructional-label mb-2">
                   {nonInstructionalDay.label}
+                </div>
+              )}
+              {override && (
+                <div className="text-[9px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-[5px] py-[1px] rounded w-fit mb-[2px]">
+                  🔄 {override.label}
                 </div>
               )}
               {dayLessons.map((lesson) => (
