@@ -1,21 +1,27 @@
-'use client';
+"use client";
 
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import { useState } from 'react';
-import { useCalendarContext } from '@/hooks/useCalendarContext';
-import { COURSES } from '@/data/mockCourses';
-import Header from '@/components/Header';
-import SemesterRibbon from '@/components/SemesterRibbon';
-import CalendarControls from '@/components/CalendarControls';
-import UnscheduledSidebar from '@/components/UnscheduledSidebar';
-import CalendarView from '@/components/CalendarView';
-import LessonDetailPanel from '@/components/LessonDetailPanel';
-import Toast from '@/components/Toast';
-import LessonCard from '@/components/LessonCard';
-import { format } from 'date-fns';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import { useState } from "react";
+import { useCalendarContext } from "@/hooks/useCalendarContext";
+import Header from "@/components/Header";
+import SemesterRibbon from "@/components/SemesterRibbon";
+import CalendarControls from "@/components/CalendarControls";
+import UnscheduledSidebar from "@/components/UnscheduledSidebar";
+import CalendarView from "@/components/CalendarView";
+import LessonDetailPanel from "@/components/LessonDetailPanel";
+import DisruptionModal from "@/components/DisruptionModal";
+import Toast from "@/components/Toast";
+import LessonCard from "@/components/LessonCard";
+import { format } from "date-fns";
 
 export default function Home() {
-  const { lessons, setLessons, addToast, currentRole } = useCalendarContext();
+  const { lessons, setLessons, addToast, currentRole, courses, pushSnapshot } =
+    useCalendarContext();
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -27,7 +33,7 @@ export default function Home() {
 
     const { active, over } = event;
 
-    if (!over || currentRole !== 'admin') return;
+    if (!over || currentRole !== "admin") return;
 
     const lessonId = active.id as string;
     const targetDate = over.id as string;
@@ -37,27 +43,39 @@ export default function Home() {
 
     // Check for conflicts (one lesson per course per day)
     const conflict = lessons.find(
-      (l) => l.scheduledDate === targetDate && l.courseId === lesson.courseId && l.id !== lesson.id
+      (l) =>
+        l.scheduledDate === targetDate &&
+        l.courseId === lesson.courseId &&
+        l.id !== lesson.id,
     );
 
     if (conflict) {
-      addToast(`⚠️ ${COURSES[lesson.courseId].name} already has a lesson on this date`);
+      addToast(
+        `⚠️ ${courses[lesson.courseId]?.name || "Course"} already has a lesson on this date`,
+      );
       return;
     }
 
-    // Update lesson schedule
+    // Snapshot for undo before drag-drop
     const oldDate = lesson.scheduledDate;
+    const dateObj = new Date(targetDate + "T12:00:00");
+    const formatted = format(dateObj, "MMM d");
+    const action = oldDate ? "moved to" : "scheduled for";
+    pushSnapshot(`${lesson.title} ${action} ${formatted}`);
+
+    // Update lesson schedule
     setLessons(
-      lessons.map((l) => (l.id === lessonId ? { ...l, scheduledDate: targetDate } : l))
+      lessons.map((l) =>
+        l.id === lessonId ? { ...l, scheduledDate: targetDate } : l,
+      ),
     );
 
-    const dateObj = new Date(targetDate + 'T12:00:00');
-    const formatted = format(dateObj, 'MMM d');
-    const action = oldDate ? 'moved to' : 'scheduled for';
     addToast(`✓ ${lesson.title} ${action} ${formatted}`);
   };
 
-  const activeDragLesson = activeDragId ? lessons.find((l) => l.id === activeDragId) : null;
+  const activeDragLesson = activeDragId
+    ? lessons.find((l) => l.id === activeDragId)
+    : null;
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -82,6 +100,7 @@ export default function Home() {
       </DragOverlay>
 
       <LessonDetailPanel />
+      <DisruptionModal />
       <Toast />
     </DndContext>
   );

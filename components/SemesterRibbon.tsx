@@ -1,38 +1,50 @@
-'use client';
+"use client";
 
-import { useCalendarContext } from '@/hooks/useCalendarContext';
-import { COURSES, SCHOOL_YEAR_START, SCHOOL_YEAR_END } from '@/data/mockCourses';
+import { useCalendarContext } from "@/hooks/useCalendarContext";
+import { SCHOOL_YEAR_START, SCHOOL_YEAR_END } from "@/data/mockCourses";
 
 const monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export default function SemesterRibbon() {
-  const { lessons, activeCourses, setCurrentDate, setCurrentWeekStart, currentView } = useCalendarContext();
+  const {
+    lessons,
+    activeCourses,
+    courses,
+    setCurrentDate,
+    setCurrentWeekStart,
+    currentView,
+  } = useCalendarContext();
   const today = new Date();
 
-  const totalDays = (SCHOOL_YEAR_END.getTime() - SCHOOL_YEAR_START.getTime()) / (1000 * 60 * 60 * 24);
+  const totalDays =
+    (SCHOOL_YEAR_END.getTime() - SCHOOL_YEAR_START.getTime()) /
+    (1000 * 60 * 60 * 24);
 
   const pct = (date: Date) => {
-    const d = Math.max(0, (date.getTime() - SCHOOL_YEAR_START.getTime()) / (1000 * 60 * 60 * 24));
+    const d = Math.max(
+      0,
+      (date.getTime() - SCHOOL_YEAR_START.getTime()) / (1000 * 60 * 60 * 24),
+    );
     return Math.min(100, (d / totalDays) * 100);
   };
 
   const jumpToMonth = (month: number, year: number) => {
     const newDate = new Date(year, month, 1);
     setCurrentDate(newDate);
-    if (currentView === 'week') {
+    if (currentView === "week") {
       const getMonday = (date: Date) => {
         const d = new Date(date);
         const day = d.getDay();
@@ -52,17 +64,21 @@ export default function SemesterRibbon() {
         School Year Overview
       </div>
       <div className="flex flex-col gap-[3px]">
-        {Object.entries(COURSES).map(([courseId, course]) => {
+        {Object.entries(courses).map(([courseId, course]) => {
           if (!activeCourses.has(courseId)) return null;
 
-          const courseLessons = lessons.filter((l) => l.courseId === courseId && l.scheduledDate);
+          const courseLessons = lessons.filter(
+            (l) => l.courseId === courseId && l.scheduledDate,
+          );
           const unitMap: Record<string, { dates: Date[]; index: number }> = {};
 
           courseLessons.forEach((l) => {
             if (!unitMap[l.unitName]) {
               unitMap[l.unitName] = { dates: [], index: l.unitIndex };
             }
-            unitMap[l.unitName].dates.push(new Date(l.scheduledDate + 'T12:00:00'));
+            unitMap[l.unitName].dates.push(
+              new Date(l.scheduledDate + "T12:00:00"),
+            );
           });
 
           return (
@@ -81,7 +97,7 @@ export default function SemesterRibbon() {
                   const left = pct(start);
                   const width = Math.max(3, pct(endExt) - left);
                   const color = course.unitColors[data.index] || course.color;
-                  const shortName = unitName.replace(/^Unit \d+: /, '');
+                  const shortName = unitName.replace(/^Unit \d+: /, "");
 
                   return (
                     <div
@@ -112,7 +128,8 @@ export default function SemesterRibbon() {
               const year = 8 + i < 12 ? 2025 : 2026;
               const d = new Date(year, m, 1);
               const left = pct(d);
-              const isCurrent = today.getMonth() === m && today.getFullYear() === year;
+              const isCurrent =
+                today.getMonth() === m && today.getFullYear() === year;
               const label = monthNames[m].substring(0, 3);
 
               return (
@@ -120,7 +137,9 @@ export default function SemesterRibbon() {
                   key={`${year}-${m}`}
                   onClick={() => jumpToMonth(m, year)}
                   className={`absolute top-0 text-[9px] font-medium cursor-pointer transition-colors ${
-                    isCurrent ? 'text-today-border font-bold' : 'text-text-muted hover:text-text'
+                    isCurrent
+                      ? "text-today-border font-bold"
+                      : "text-text-muted hover:text-text"
                   }`}
                   style={{ left: `${left}%` }}
                 >

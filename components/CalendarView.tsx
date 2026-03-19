@@ -1,18 +1,27 @@
-'use client';
+"use client";
 
-import { useCalendarContext } from '@/hooks/useCalendarContext';
-import { useDroppable } from '@dnd-kit/core';
-import { useDraggable } from '@dnd-kit/core';
-import LessonCard from './LessonCard';
-import { COURSES } from '@/data/mockCourses';
+import { useCalendarContext } from "@/hooks/useCalendarContext";
+import { useDroppable } from "@dnd-kit/core";
+import { useDraggable } from "@dnd-kit/core";
+import LessonCard from "./LessonCard";
+import DayActionMenu from "./DayActionMenu";
+import { isValidMeetingDate } from "@/utils/cascadeUtils";
 
-const dayNamesShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function DraggableLessonCard({ lessonId, lesson, context }: { lessonId: string; lesson: any; context: 'month' | 'week' }) {
+function DraggableLessonCard({
+  lessonId,
+  lesson,
+  context,
+}: {
+  lessonId: string;
+  lesson: any;
+  context: "month" | "week";
+}) {
   const { currentRole } = useCalendarContext();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lessonId,
-    disabled: currentRole !== 'admin',
+    disabled: currentRole !== "admin",
   });
 
   return (
@@ -27,18 +36,54 @@ function DraggableLessonCard({ lessonId, lesson, context }: { lessonId: string; 
   );
 }
 
-function DroppableDay({ date, children, isWeekend, className = '' }: { date: string; children: React.ReactNode; isWeekend: boolean; className?: string }) {
+function MeetingDayDots({ dateStr }: { dateStr: string }) {
+  const { courses, activeCourses, nonInstructionalDays } = useCalendarContext();
+
+  const meetingCourses = Object.values(courses).filter(
+    (course) =>
+      activeCourses.has(course.id) &&
+      isValidMeetingDate(dateStr, course, nonInstructionalDays),
+  );
+
+  if (meetingCourses.length === 0) return null;
+
+  return (
+    <div className="flex gap-[3px] mt-[1px]">
+      {meetingCourses.map((course) => (
+        <span
+          key={course.id}
+          className="w-[5px] h-[5px] rounded-full flex-shrink-0"
+          style={{ backgroundColor: course.color }}
+          title={`${course.name} meets this day`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DroppableDay({
+  date,
+  children,
+  isWeekend,
+  className = "",
+}: {
+  date: string;
+  children: React.ReactNode;
+  isWeekend: boolean;
+  className?: string;
+}) {
   const { currentRole, nonInstructionalDays } = useCalendarContext();
   const isNonInstructional = nonInstructionalDays.some((d) => d.date === date);
 
   const { setNodeRef, isOver } = useDroppable({
     id: date,
-    disabled: currentRole !== 'admin' || isWeekend || isNonInstructional,
+    disabled: currentRole !== "admin" || isWeekend || isNonInstructional,
   });
 
-  const dropClass = isOver && currentRole === 'admin' && !isWeekend && !isNonInstructional
-    ? 'bg-drop-target outline outline-2 outline-dashed outline-drop-border outline-offset-[-2px]'
-    : '';
+  const dropClass =
+    isOver && currentRole === "admin" && !isWeekend && !isNonInstructional
+      ? "bg-drop-target outline outline-2 outline-dashed outline-drop-border outline-offset-[-2px]"
+      : "";
 
   return (
     <div ref={setNodeRef} className={`${className} ${dropClass}`}>
@@ -55,19 +100,36 @@ export default function CalendarView() {
     lessons,
     activeCourses,
     nonInstructionalDays,
+    courses,
+    currentRole,
   } = useCalendarContext();
 
   const today = new Date();
 
   const isToday = (y: number, m: number, d: number) => {
-    return today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
+    return (
+      today.getFullYear() === y &&
+      today.getMonth() === m &&
+      today.getDate() === d
+    );
   };
 
   const dateStr = (y: number, m: number, d: number) => {
-    return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   };
 
-  if (currentView === 'month') {
+  // Check if any active course meets on this date
+  const hasMeetingDay = (ds: string, isWeekend: boolean) => {
+    if (isWeekend) return false;
+    if (nonInstructionalDays.some((d) => d.date === ds)) return false;
+    return Object.values(courses).some(
+      (course) =>
+        activeCourses.has(course.id) &&
+        isValidMeetingDate(ds, course, nonInstructionalDays),
+    );
+  };
+
+  if (currentView === "month") {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
@@ -81,7 +143,12 @@ export default function CalendarView() {
       const day = prevMonthDays - i;
       const prevMonth = month === 0 ? 11 : month - 1;
       const prevYear = month === 0 ? year - 1 : year;
-      days.push({ day, month: prevMonth, year: prevYear, isCurrentMonth: false });
+      days.push({
+        day,
+        month: prevMonth,
+        year: prevYear,
+        isCurrentMonth: false,
+      });
     }
 
     // Current month days
@@ -95,7 +162,12 @@ export default function CalendarView() {
     for (let d = 1; d <= remaining; d++) {
       const nextMonth = month === 11 ? 0 : month + 1;
       const nextYear = month === 11 ? year + 1 : year;
-      days.push({ day: d, month: nextMonth, year: nextYear, isCurrentMonth: false });
+      days.push({
+        day: d,
+        month: nextMonth,
+        year: nextYear,
+        isCurrentMonth: false,
+      });
     }
 
     return (
@@ -115,33 +187,56 @@ export default function CalendarView() {
             const dow = new Date(y, m, day).getDay();
             const isTodayCell = isToday(y, m, day);
             const isWeekend = dow === 0 || dow === 6;
-            const nonInstructionalDay = nonInstructionalDays.find((d) => d.date === ds);
+            const nonInstructionalDay = nonInstructionalDays.find(
+              (d) => d.date === ds,
+            );
+            const isMeeting = hasMeetingDay(ds, isWeekend);
 
             const dayLessons = lessons.filter(
-              (l) => l.scheduledDate === ds && activeCourses.has(l.courseId)
+              (l) => l.scheduledDate === ds && activeCourses.has(l.courseId),
             );
 
-            let cellClasses = 'bg-surface min-h-[100px] p-[5px] flex flex-col transition-all';
-            if (!isCurrentMonth) cellClasses += ' bg-[#fafaf8]';
-            if (isTodayCell) cellClasses += ' bg-today-bg';
-            if (isWeekend) cellClasses += ' bg-[#fbfbf9]';
-            if (nonInstructionalDay) cellClasses += ' non-instructional-day';
+            let cellClasses =
+              "bg-surface min-h-[100px] p-[5px] flex flex-col transition-all relative group";
+            if (!isCurrentMonth) cellClasses += " bg-[#fafaf8]";
+            if (isTodayCell) cellClasses += " bg-today-bg";
+            else if (isMeeting && isCurrentMonth)
+              cellClasses += " bg-[#f5faf5]";
+            if (isWeekend) cellClasses += " bg-[#fbfbf9]";
+            if (nonInstructionalDay) cellClasses += " non-instructional-day";
 
             return (
-              <DroppableDay key={idx} date={ds} isWeekend={isWeekend} className={cellClasses}>
-                <div
-                  className={`text-[12px] font-medium text-text-muted mb-[3px] p-[2px] w-fit ${
-                    isTodayCell
-                      ? 'bg-today-border text-white w-[22px] h-[22px] rounded-full flex items-center justify-center text-[11px]'
-                      : !isCurrentMonth
-                      ? 'text-[#ccc]'
-                      : ''
-                  }`}
-                >
-                  {day}
+              <DroppableDay
+                key={idx}
+                date={ds}
+                isWeekend={isWeekend}
+                className={cellClasses}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-[4px]">
+                    <div
+                      className={`text-[12px] font-medium text-text-muted mb-[3px] p-[2px] w-fit ${
+                        isTodayCell
+                          ? "bg-today-border text-white w-[22px] h-[22px] rounded-full flex items-center justify-center text-[11px]"
+                          : !isCurrentMonth
+                            ? "text-[#ccc]"
+                            : ""
+                      }`}
+                    >
+                      {day}
+                    </div>
+                    <MeetingDayDots dateStr={ds} />
+                  </div>
+                  {/* Day action menu - admin only, not on weekends or non-instructional days */}
+                  {currentRole === "admin" &&
+                    !isWeekend &&
+                    !nonInstructionalDay &&
+                    isCurrentMonth && <DayActionMenu date={ds} />}
                 </div>
                 {nonInstructionalDay && (
-                  <div className="non-instructional-label">{nonInstructionalDay.label}</div>
+                  <div className="non-instructional-label">
+                    {nonInstructionalDay.label}
+                  </div>
                 )}
                 <div className="flex flex-col gap-[2px] flex-1">
                   {dayLessons.map((lesson) => (
@@ -175,25 +270,30 @@ export default function CalendarView() {
     <div className="flex-1 overflow-y-auto px-6 pb-6">
       <div className="grid grid-cols-5 gap-[1px] bg-border border border-border rounded-xl overflow-hidden">
         {weekDays.map((d) => {
+          const ds = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
           const isTodayCell = d.toDateString() === today.toDateString();
+          const isMeeting = hasMeetingDay(ds, false);
           return (
             <div
               key={d.toISOString()}
               className={`bg-surface p-[10px] px-3 text-center border-b border-border ${
-                isTodayCell ? 'bg-today-bg' : ''
+                isTodayCell ? "bg-today-bg" : isMeeting ? "bg-[#f5faf5]" : ""
               }`}
             >
               <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted">
                 {dayNamesShort[d.getDay()]}
               </div>
-              <div
-                className={`text-[18px] font-semibold text-text mt-[2px] ${
-                  isTodayCell
-                    ? 'bg-today-border text-white w-[30px] h-[30px] rounded-full inline-flex items-center justify-center'
-                    : ''
-                }`}
-              >
-                {d.getDate()}
+              <div className="flex items-center justify-center gap-1">
+                <div
+                  className={`text-[18px] font-semibold text-text mt-[2px] ${
+                    isTodayCell
+                      ? "bg-today-border text-white w-[30px] h-[30px] rounded-full inline-flex items-center justify-center"
+                      : ""
+                  }`}
+                >
+                  {d.getDate()}
+                </div>
+                <MeetingDayDots dateStr={ds} />
               </div>
             </div>
           );
@@ -201,18 +301,34 @@ export default function CalendarView() {
 
         {weekDays.map((d) => {
           const ds = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
-          const nonInstructionalDay = nonInstructionalDays.find((nd) => nd.date === ds);
+          const nonInstructionalDay = nonInstructionalDays.find(
+            (nd) => nd.date === ds,
+          );
           const dayLessons = lessons.filter(
-            (l) => l.scheduledDate === ds && activeCourses.has(l.courseId)
+            (l) => l.scheduledDate === ds && activeCourses.has(l.courseId),
           );
 
-          let cellClasses = 'bg-surface min-h-[400px] p-2 flex flex-col gap-1 transition-all';
-          if (nonInstructionalDay) cellClasses += ' non-instructional-day';
+          let cellClasses =
+            "bg-surface min-h-[400px] p-2 flex flex-col gap-1 transition-all relative group";
+          if (nonInstructionalDay) cellClasses += " non-instructional-day";
 
           return (
-            <DroppableDay key={d.toISOString()} date={ds} isWeekend={false} className={cellClasses}>
+            <DroppableDay
+              key={d.toISOString()}
+              date={ds}
+              isWeekend={false}
+              className={cellClasses}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div />
+                {currentRole === "admin" && !nonInstructionalDay && (
+                  <DayActionMenu date={ds} />
+                )}
+              </div>
               {nonInstructionalDay && (
-                <div className="non-instructional-label mb-2">{nonInstructionalDay.label}</div>
+                <div className="non-instructional-label mb-2">
+                  {nonInstructionalDay.label}
+                </div>
               )}
               {dayLessons.map((lesson) => (
                 <DraggableLessonCard
