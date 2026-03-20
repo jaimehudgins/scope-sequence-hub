@@ -75,6 +75,11 @@ type CalendarContextType = {
   teacherAbsenceModal: { isOpen: boolean; targetDate: string } | null;
   openTeacherAbsenceModal: (targetDate: string) => void;
   closeTeacherAbsenceModal: () => void;
+
+  // Calendar upload modal
+  calendarUploadModalOpen: boolean;
+  openCalendarUploadModal: () => void;
+  closeCalendarUploadModal: () => void;
 };
 
 export type ToastMessage = {
@@ -132,6 +137,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     isOpen: boolean;
     targetDate: string;
   } | null>(null);
+
+  // Calendar upload modal
+  const [calendarUploadModalOpen, setCalendarUploadModalOpen] = useState(false);
 
   const addToast = useCallback((message: string) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -249,6 +257,15 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setTeacherAbsenceModal(null);
   }, []);
 
+  // --- Calendar upload modal ---
+  const openCalendarUploadModal = useCallback(() => {
+    setCalendarUploadModalOpen(true);
+  }, []);
+
+  const closeCalendarUploadModal = useCallback(() => {
+    setCalendarUploadModalOpen(false);
+  }, []);
+
   // --- Schedule overrides ---
   const addScheduleOverride = useCallback((override: ScheduleOverride) => {
     setScheduleOverrides((prev) => {
@@ -311,6 +328,11 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         teacherAbsenceModal,
         openTeacherAbsenceModal,
         closeTeacherAbsenceModal,
+
+        // Calendar upload modal
+        calendarUploadModalOpen,
+        openCalendarUploadModal,
+        closeCalendarUploadModal,
       }}
     >
       {children}

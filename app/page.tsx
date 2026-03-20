@@ -15,6 +15,7 @@ import UnscheduledSidebar from "@/components/UnscheduledSidebar";
 import CalendarView from "@/components/CalendarView";
 import LessonDetailPanel from "@/components/LessonDetailPanel";
 import DisruptionModal from "@/components/DisruptionModal";
+import CalendarUploadModal from "@/components/CalendarUploadModal";
 import Toast from "@/components/Toast";
 import LessonCard from "@/components/LessonCard";
 import { format } from "date-fns";
@@ -30,6 +31,8 @@ export default function Home() {
     pushSnapshot,
     nonInstructionalDays,
     scheduleOverrides,
+    calendarUploadModalOpen,
+    closeCalendarUploadModal,
   } = useCalendarContext();
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
@@ -141,6 +144,10 @@ export default function Home() {
 
       <LessonDetailPanel />
       <DisruptionModal />
+      <CalendarUploadModal
+        isOpen={calendarUploadModalOpen}
+        onClose={closeCalendarUploadModal}
+      />
       <Toast />
     </DndContext>
   );

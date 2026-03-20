@@ -13,6 +13,7 @@ export default function Header() {
     redo,
     lessons,
     courses,
+    openCalendarUploadModal,
   } = useCalendarContext();
 
   const handleRoleChange = (role: "admin" | "teacher") => {
@@ -110,6 +111,18 @@ export default function Header() {
         </div>
       </div>
       <div className="flex items-center gap-3">
+        {/* Import Calendar button - Admin only */}
+        {currentRole === "admin" && (
+          <button
+            onClick={openCalendarUploadModal}
+            className="px-3 py-2 border border-border rounded-lg text-[13px] font-medium text-text-muted hover:bg-bg hover:text-text transition-all flex items-center gap-2"
+            title="Import non-instructional days"
+          >
+            <span>📅</span>
+            <span>Import Calendar</span>
+          </button>
+        )}
+
         {/* Export button */}
         <button
           onClick={handleExportCSV}
