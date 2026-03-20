@@ -13,10 +13,16 @@ function DraggableLessonCard({ lessonId, children }: { lessonId: string; childre
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lessonId,
     disabled: currentRole !== 'admin',
+    activationConstraint: {
+      distance: 5, // Require 5px of movement before drag starts (allows clicks to work)
+    },
   });
 
   const handleClick = (e: React.MouseEvent) => {
-    setSelectedLessonId(lessonId);
+    // Don't open panel if we're dragging
+    if (!isDragging) {
+      setSelectedLessonId(lessonId);
+    }
   };
 
   if (currentRole !== 'admin') {
@@ -28,25 +34,16 @@ function DraggableLessonCard({ lessonId, children }: { lessonId: string; childre
     );
   }
 
-  // For admins, separate drag handle from clickable card
+  // In the sidebar (lesson bank), the entire card should be draggable since that's the primary action
   return (
     <div
       ref={setNodeRef}
       {...attributes}
-      style={{ opacity: isDragging ? 0.4 : 1, position: 'relative' }}
+      {...listeners}
+      onClick={handleClick}
+      style={{ opacity: isDragging ? 0.4 : 1 }}
     >
-      <div onClick={handleClick}>
-        {children}
-      </div>
-      {/* Drag handle - only this area triggers drag */}
-      <div
-        {...listeners}
-        className="absolute top-0 left-0 w-[12px] h-full cursor-grab active:cursor-grabbing opacity-0 hover:opacity-100 transition-opacity"
-        style={{
-          background: 'linear-gradient(90deg, rgba(0,0,0,0.1) 0%, transparent 100%)',
-        }}
-        title="Drag to reschedule"
-      />
+      {children}
     </div>
   );
 }
