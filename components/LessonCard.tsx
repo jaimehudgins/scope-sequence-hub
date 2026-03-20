@@ -25,6 +25,7 @@ export default function LessonCard({
 
   const icons = (
     <>
+      {lesson.teacherNoteFlagged && <span className="text-[11px]">🚩</span>}
       {isSchoolCreated && <span className="text-[11px]">🏫</span>}
       {lesson.isMilestone && <span className="text-[11px]">🏁</span>}
       {lesson.hasAlmaIntegration && <span className="text-[11px]">🤖</span>}
@@ -77,7 +78,9 @@ export default function LessonCard({
         <span className="text-[10px] opacity-70 font-normal">
           {isSchoolCreated ? "School-Created Lesson" : lesson.unitName}
         </span>
-        {(lesson.isMilestone || lesson.hasAlmaIntegration) && (
+        {(lesson.teacherNoteFlagged ||
+          lesson.isMilestone ||
+          lesson.hasAlmaIntegration) && (
           <span className="flex gap-[2px] self-start">{icons}</span>
         )}
       </div>
@@ -96,7 +99,8 @@ export default function LessonCard({
           {isSchoolCreated && "🏫 "}
           {displayTitle} ({lesson.duration})
         </span>
-        {(lesson.isMilestone ||
+        {(lesson.teacherNoteFlagged ||
+          lesson.isMilestone ||
           lesson.hasAlmaIntegration ||
           isSchoolCreated) && (
           <span className="ml-auto flex gap-[2px] flex-shrink-0">{icons}</span>
@@ -117,7 +121,10 @@ export default function LessonCard({
         {isSchoolCreated && "🏫 "}
         {displayTitle} ({lesson.duration})
       </span>
-      {(lesson.isMilestone || lesson.hasAlmaIntegration || isSchoolCreated) && (
+      {(lesson.teacherNoteFlagged ||
+        lesson.isMilestone ||
+        lesson.hasAlmaIntegration ||
+        isSchoolCreated) && (
         <span className="ml-auto flex gap-[2px] text-[9px] flex-shrink-0">
           {icons}
         </span>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useCalendarContext } from "@/hooks/useCalendarContext";
 import { format } from "date-fns";
 
@@ -24,6 +25,12 @@ export default function LessonDetailPanel() {
   const course = courses[lesson.courseId];
   const isSchoolCreated = lesson.type === "school-created";
 
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteText, setNoteText] = useState(lesson.teacherNote || "");
+  const [noteFlagged, setNoteFlagged] = useState(
+    lesson.teacherNoteFlagged || false,
+  );
+
   const closePanel = () => {
     setSelectedLessonId(null);
   };
@@ -44,6 +51,67 @@ export default function LessonDetailPanel() {
       setSelectedLessonId(null);
       openDisruptionModal("cancel-day", lesson.scheduledDate);
     }
+  };
+
+  const handleSaveNote = () => {
+    pushSnapshot(`Updated teacher note for "${lesson.title}"`);
+
+    const updatedLesson = {
+      ...lesson,
+      teacherNote: noteText.trim() || undefined,
+      teacherNoteFlagged: noteText.trim() ? noteFlagged : undefined,
+      teacherNoteAuthor: noteText.trim()
+        ? lesson.teacherNoteAuthor || "Teacher"
+        : undefined,
+      teacherNoteDate: noteText.trim()
+        ? new Date().toISOString().split("T")[0]
+        : undefined,
+    };
+
+    setLessons(lessons.map((l) => (l.id === lesson.id ? updatedLesson : l)));
+
+    setIsEditingNote(false);
+
+    if (noteText.trim() && noteFlagged) {
+      addToast(`🚩 Note saved and flagged for admin review`);
+    } else if (noteText.trim()) {
+      addToast(`📝 Note saved`);
+    } else {
+      addToast(`Note removed`);
+    }
+  };
+
+  const handleClearFlag = () => {
+    pushSnapshot(`Cleared teacher note flag for "${lesson.title}"`);
+
+    const updatedLesson = {
+      ...lesson,
+      teacherNoteFlagged: false,
+    };
+
+    setLessons(lessons.map((l) => (l.id === lesson.id ? updatedLesson : l)));
+    setNoteFlagged(false);
+
+    addToast(`Flag cleared for "${lesson.title}"`);
+  };
+
+  const handleDeleteNote = () => {
+    pushSnapshot(`Deleted teacher note for "${lesson.title}"`);
+
+    const updatedLesson = {
+      ...lesson,
+      teacherNote: undefined,
+      teacherNoteFlagged: undefined,
+      teacherNoteAuthor: undefined,
+      teacherNoteDate: undefined,
+    };
+
+    setLessons(lessons.map((l) => (l.id === lesson.id ? updatedLesson : l)));
+    setNoteText("");
+    setNoteFlagged(false);
+    setIsEditingNote(false);
+
+    addToast(`Note deleted`);
   };
 
   const dateDisplay = lesson.scheduledDate
@@ -127,6 +195,113 @@ export default function LessonDetailPanel() {
           {isSchoolCreated && lesson.schoolCreatedDescription
             ? lesson.schoolCreatedDescription
             : lesson.description}
+        </div>
+
+        {/* Teacher Note Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-[6px]">
+            <label className="text-[12px] font-semibold text-text-muted uppercase tracking-[0.8px]">
+              Teacher Note
+            </label>
+            {lesson.teacherNoteFlagged && (
+              <span className="text-[10px] font-medium uppercase tracking-[0.5px] px-[6px] py-[2px] rounded bg-red-25 border border-red-200 text-red-900">
+                🚩 Flagged
+              </span>
+            )}
+          </div>
+
+          {!isEditingNote && !lesson.teacherNote && (
+            <button
+              onClick={() => setIsEditingNote(true)}
+              className="w-full px-3 py-[10px] rounded-lg border border-dashed border-border text-[13px] text-text-muted hover:border-text-muted hover:text-text transition-colors cursor-pointer"
+            >
+              + Add a note for this lesson
+            </button>
+          )}
+
+          {!isEditingNote && lesson.teacherNote && (
+            <div className="border border-border rounded-lg p-3 bg-bg">
+              <div className="text-[13px] text-text mb-2 whitespace-pre-wrap">
+                {lesson.teacherNote}
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] text-text-muted">
+                  {lesson.teacherNoteAuthor &&
+                    `${lesson.teacherNoteAuthor} • `}
+                  {lesson.teacherNoteDate &&
+                    format(
+                      new Date(lesson.teacherNoteDate + "T12:00:00"),
+                      "MMM d, yyyy",
+                    )}
+                </div>
+                <div className="flex gap-2">
+                  {currentRole === "admin" && lesson.teacherNoteFlagged && (
+                    <button
+                      onClick={handleClearFlag}
+                      className="text-[11px] text-text-muted hover:text-text hover:underline cursor-pointer"
+                    >
+                      Clear Flag
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsEditingNote(true)}
+                    className="text-[11px] text-blue-700 hover:underline cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDeleteNote}
+                    className="text-[11px] text-red-700 hover:underline cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isEditingNote && (
+            <div className="border border-border rounded-lg p-3 bg-bg">
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Add a note about this lesson (e.g., modifications, student needs, pacing adjustments)..."
+                className="w-full px-3 py-2 rounded-lg border border-border text-[13px] text-text bg-surface focus:outline-none focus:border-text-muted resize-none mb-3"
+                rows={4}
+              />
+              <div className="flex items-center justify-between mb-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={noteFlagged}
+                    onChange={(e) => setNoteFlagged(e.target.checked)}
+                    className="w-4 h-4 rounded border-border cursor-pointer"
+                  />
+                  <span className="text-[12px] text-text-muted">
+                    🚩 Flag for Admin Review
+                  </span>
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveNote}
+                  className="flex-1 px-4 py-[8px] rounded-lg bg-text text-white text-[13px] font-semibold hover:opacity-90 transition-all cursor-pointer"
+                >
+                  Save Note
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditingNote(false);
+                    setNoteText(lesson.teacherNote || "");
+                    setNoteFlagged(lesson.teacherNoteFlagged || false);
+                  }}
+                  className="px-4 py-[8px] rounded-lg border border-border text-[13px] font-medium text-text-muted hover:bg-surface transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* View Full Lesson button - only for curriculum lessons */}

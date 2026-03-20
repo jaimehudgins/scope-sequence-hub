@@ -35,6 +35,10 @@ export type Lesson = {
   type?: LessonType;
   schoolCreatedTitle?: string;
   schoolCreatedDescription?: string;
+  teacherNote?: string;
+  teacherNoteFlagged?: boolean;
+  teacherNoteAuthor?: string;
+  teacherNoteDate?: string;
 };
 
 export type NonInstructionalDay = {

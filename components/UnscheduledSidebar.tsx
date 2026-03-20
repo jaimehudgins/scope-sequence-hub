@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useCalendarContext } from '@/hooks/useCalendarContext';
 import { COURSES } from '@/data/mockCourses';
 import LessonCard from './LessonCard';
+import AutoScheduleModal from './AutoScheduleModal';
 import { useDraggable } from '@dnd-kit/core';
+import { Lesson } from '@/types';
 
 function DraggableLessonCard({ lessonId, children }: { lessonId: string; children: React.ReactNode }) {
   const { currentRole } = useCalendarContext();
@@ -25,7 +28,12 @@ function DraggableLessonCard({ lessonId, children }: { lessonId: string; childre
 }
 
 export default function UnscheduledSidebar() {
-  const { lessons, sidebarCollapsed, setSidebarCollapsed } = useCalendarContext();
+  const { lessons, sidebarCollapsed, setSidebarCollapsed, currentRole } = useCalendarContext();
+  const [autoScheduleModal, setAutoScheduleModal] = useState<{
+    isOpen: boolean;
+    unitLessons: Lesson[];
+    unitName: string;
+  } | null>(null);
 
   const unscheduledLessons = lessons.filter((l) => !l.scheduledDate);
 
@@ -79,8 +87,25 @@ export default function UnscheduledSidebar() {
                 </div>
                 {Object.entries(units).map(([unitName, unitLessons]) => (
                   <div key={unitName} className="mb-[6px]">
-                    <div className="text-[11px] font-medium text-text-muted px-2 py-[2px]">
-                      {unitName}
+                    <div className="flex items-center justify-between px-2 py-[2px] group">
+                      <div className="text-[11px] font-medium text-text-muted">
+                        {unitName}
+                      </div>
+                      {currentRole === 'admin' && unitLessons.length > 1 && (
+                        <button
+                          onClick={() =>
+                            setAutoScheduleModal({
+                              isOpen: true,
+                              unitLessons,
+                              unitName,
+                            })
+                          }
+                          className="opacity-0 group-hover:opacity-100 text-[10px] text-blue-700 hover:text-blue-900 transition-all px-1 py-0.5 rounded hover:bg-blue-25"
+                          title="Auto-schedule this unit"
+                        >
+                          ✨ Auto
+                        </button>
+                      )}
                     </div>
                     {unitLessons.map((lesson) => (
                       <DraggableLessonCard key={lesson.id} lessonId={lesson.id}>
@@ -99,6 +124,15 @@ export default function UnscheduledSidebar() {
             </div>
           )}
         </div>
+      )}
+
+      {autoScheduleModal && (
+        <AutoScheduleModal
+          isOpen={autoScheduleModal.isOpen}
+          onClose={() => setAutoScheduleModal(null)}
+          unitLessons={autoScheduleModal.unitLessons}
+          unitName={autoScheduleModal.unitName}
+        />
       )}
     </div>
   );
