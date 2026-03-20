@@ -62,7 +62,7 @@ export default function CalendarUploadModal({
     return !isNaN(date.getTime());
   };
 
-  const processRows = (rawRows: any[]) => {
+  const processRows = useCallback((rawRows: any[]) => {
     const rows: ImportRow[] = [];
 
     for (const row of rawRows) {
@@ -93,63 +93,75 @@ export default function CalendarUploadModal({
     setImportData(rows);
     setSchoolYear(detectSchoolYear(rows.map((r) => r.date)));
     setStep("preview");
-  };
-
-  const parseCSV = (file: File) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      comments: "#",
-      complete: (results) => {
-        processRows(results.data as any[]);
-      },
-      error: (error) => {
-        addToast(`❌ Error parsing CSV: ${error.message}`);
-      },
-    });
-  };
-
-  const parseExcel = async (file: File) => {
-    try {
-      const XLSX = await import("xlsx");
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer);
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
-      processRows(data);
-    } catch (error: any) {
-      addToast(`❌ Error parsing Excel: ${error.message}`);
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.name.endsWith(".csv")) {
-        parseCSV(file);
-      } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
-        parseExcel(file);
-      } else {
-        addToast("❌ Please upload a CSV or Excel file");
-      }
-    }
-  };
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      if (file.name.endsWith(".csv")) {
-        parseCSV(file);
-      } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
-        parseExcel(file);
-      } else {
-        addToast("❌ Please upload a CSV or Excel file");
-      }
-    }
   }, []);
+
+  const parseCSV = useCallback(
+    (file: File) => {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        comments: "#",
+        complete: (results) => {
+          processRows(results.data as any[]);
+        },
+        error: (error) => {
+          addToast(`❌ Error parsing CSV: ${error.message}`);
+        },
+      });
+    },
+    [addToast, processRows],
+  );
+
+  const parseExcel = useCallback(
+    async (file: File) => {
+      try {
+        const XLSX = await import("xlsx");
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet);
+        processRows(data);
+      } catch (error: any) {
+        addToast(`❌ Error parsing Excel: ${error.message}`);
+      }
+    },
+    [addToast, processRows],
+  );
+
+  const handleFileUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        if (file.name.endsWith(".csv")) {
+          parseCSV(file);
+        } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+          parseExcel(file);
+        } else {
+          addToast("❌ Please upload a CSV or Excel file");
+        }
+      }
+    },
+    [parseCSV, parseExcel, addToast],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        if (file.name.endsWith(".csv")) {
+          parseCSV(file);
+        } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+          parseExcel(file);
+        } else {
+          addToast("❌ Please upload a CSV or Excel file");
+        }
+      }
+    },
+    [parseCSV, parseExcel, addToast],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
