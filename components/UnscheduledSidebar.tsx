@@ -9,17 +9,25 @@ import { useDraggable } from '@dnd-kit/core';
 import { Lesson } from '@/types';
 
 function DraggableLessonCard({ lessonId, children }: { lessonId: string; children: React.ReactNode }) {
-  const { currentRole } = useCalendarContext();
+  const { currentRole, setSelectedLessonId } = useCalendarContext();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lessonId,
     disabled: currentRole !== 'admin',
   });
+
+  const handleClick = (e: React.MouseEvent) => {
+    // If we're not dragging and not in the middle of a drag operation, open the detail panel
+    if (!isDragging) {
+      setSelectedLessonId(lessonId);
+    }
+  };
 
   return (
     <div
       ref={setNodeRef}
       {...attributes}
       {...listeners}
+      onClick={handleClick}
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       {children}
