@@ -226,11 +226,11 @@ export default function CalendarView() {
 
             let cellClasses =
               "bg-surface min-h-[100px] p-[5px] flex flex-col transition-all relative group";
-            if (!isCurrentMonth) cellClasses += " bg-[#fafaf8]";
+            if (!isCurrentMonth) cellClasses += " bg-neutral-50";
             if (isTodayCell) cellClasses += " bg-today-bg";
             else if (isMeeting && isCurrentMonth)
-              cellClasses += " bg-[#f5faf5]";
-            if (isWeekend) cellClasses += " bg-[#fbfbf9]";
+              cellClasses += " bg-green-25";
+            if (isWeekend) cellClasses += " bg-neutral-25";
             // Only apply non-instructional styling if it's NOT a teacher absence
             if (nonInstructionalDay) cellClasses += " non-instructional-day";
 
@@ -249,7 +249,7 @@ export default function CalendarView() {
                         isTodayCell
                           ? "bg-today-border text-white w-[22px] h-[22px] rounded-full flex items-center justify-center text-[11px]"
                           : !isCurrentMonth
-                            ? "text-[#ccc]"
+                            ? "text-neutral-100"
                             : ""
                       }`}
                     >
@@ -291,7 +291,7 @@ export default function CalendarView() {
                   </div>
                 )}
                 {override && (
-                  <div className="text-[9px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-[5px] py-[1px] rounded w-fit mb-[2px]">
+                  <div className="text-[9px] font-semibold text-lavender-700 bg-lavender-25 px-[5px] py-[1px] rounded w-fit mb-[2px]">
                     🔄 {override.label}
                   </div>
                 )}
@@ -341,7 +341,7 @@ export default function CalendarView() {
             <div
               key={d.toISOString()}
               className={`bg-surface p-[10px] px-3 text-center border-b border-border relative ${
-                isTodayCell ? "bg-today-bg" : isMeeting ? "bg-[#f5faf5]" : ""
+                isTodayCell ? "bg-today-bg" : isMeeting ? "bg-green-25" : ""
               }`}
             >
               <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted">
@@ -422,7 +422,7 @@ export default function CalendarView() {
                 </div>
               )}
               {override && (
-                <div className="text-[9px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-[5px] py-[1px] rounded w-fit mb-[2px]">
+                <div className="text-[9px] font-semibold text-lavender-700 bg-lavender-25 px-[5px] py-[1px] rounded w-fit mb-[2px]">
                   🔄 {override.label}
                 </div>
               )}

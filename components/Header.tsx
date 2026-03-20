@@ -103,7 +103,7 @@ export default function Header() {
     <div className="bg-surface border-b border-border px-8 py-[14px] flex items-center justify-between sticky top-0 z-[100]">
       <div className="flex items-center gap-4">
         <div className="font-serif text-[22px] font-bold text-text tracking-[-0.5px]">
-          <span className="text-[#16a34a]">W</span> Willow
+          <span className="text-green-700">W</span> Willow
         </div>
         <div className="text-[14px] text-text-muted pl-4 border-l border-border">
           Scope & Sequence

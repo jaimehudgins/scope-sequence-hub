@@ -75,7 +75,7 @@ export default function LessonDetailPanel() {
             {course?.name}
           </div>
           {isSchoolCreated && (
-            <span className="text-[10px] font-medium uppercase tracking-[0.5px] px-[6px] py-[2px] rounded bg-[#fffbeb] border border-[#fde68a] text-[#92400e]">
+            <span className="text-[10px] font-medium uppercase tracking-[0.5px] px-[6px] py-[2px] rounded bg-yellow-25 border border-yellow-200 text-yellow-900">
               🏫 School-Created
             </span>
           )}
@@ -101,7 +101,7 @@ export default function LessonDetailPanel() {
             ⏱ {lesson.duration} min
           </div>
           {isSchoolCreated && (
-            <div className="px-[10px] py-1 rounded-md text-[12px] font-medium bg-[#fffbeb] border border-[#fde68a] text-[#92400e] flex items-center gap-1">
+            <div className="px-[10px] py-1 rounded-md text-[12px] font-medium bg-yellow-25 border border-yellow-200 text-yellow-900 flex items-center gap-1">
               🏫 School-Created
             </div>
           )}

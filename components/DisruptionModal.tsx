@@ -669,7 +669,7 @@ export default function DisruptionModal() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border flex items-center justify-between flex-shrink-0 bg-[#fafaf8]">
+        <div className="px-6 py-4 border-t border-border flex items-center justify-between flex-shrink-0 bg-neutral-50">
           <button
             onClick={closeDisruptionModal}
             className="px-4 py-[8px] rounded-lg border border-border text-[13px] font-medium text-text-muted hover:bg-bg transition-colors cursor-pointer"

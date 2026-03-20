@@ -10,8 +10,8 @@
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: #f8f7f4;
-  color: #1a1a1a;
+  background: #F0F0F0; /* neutral-25 */
+  color: #1B1027; /* neutral-900 */
   min-height: 100vh;
 }
 
@@ -25,21 +25,21 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #e5e2dc;
+  background: #C4C4C4; /* neutral-100 */
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
+  background: #A8A8A8; /* neutral-200 */
 }
 
 .non-instructional-day {
   background: repeating-linear-gradient(
     45deg,
-    #f5f5f5,
-    #f5f5f5 10px,
-    #e8e8e8 10px,
-    #e8e8e8 20px
+    #E0E0E0, /* neutral-50 */
+    #E0E0E0 10px,
+    #C4C4C4 10px, /* neutral-100 */
+    #C4C4C4 20px
   );
   pointer-events: none;
   position: relative;
@@ -47,7 +47,7 @@ body {
 
 .non-instructional-label {
   font-size: 11px;
-  color: #999;
+  color: #707070; /* neutral-400 */
   font-weight: 600;
   padding: 4px 6px;
   background: rgba(255, 255, 255, 0.8);

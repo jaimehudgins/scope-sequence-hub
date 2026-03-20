@@ -50,7 +50,7 @@ export default function CascadePreview({
           📋 {totalShifts} lesson{totalShifts !== 1 ? 's' : ''} will shift forward
         </div>
         {totalOverflow > 0 && (
-          <div className="text-[11px] font-medium text-[#dc2626] flex items-center gap-1">
+          <div className="text-[11px] font-medium text-red-600 flex items-center gap-1">
             ⚠️ {totalOverflow} overflow
           </div>
         )}
@@ -65,7 +65,7 @@ export default function CascadePreview({
           return (
             <div key={courseId}>
               {/* Course header */}
-              <div className="px-4 py-[6px] bg-[#fafaf8] border-b border-border flex items-center gap-[6px]">
+              <div className="px-4 py-[6px] bg-neutral-50 border-b border-border flex items-center gap-[6px]">
                 <span
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ backgroundColor: course.color }}
@@ -84,8 +84,8 @@ export default function CascadePreview({
                   <div
                     key={shift.lesson.id}
                     className={`px-4 py-[8px] border-b border-border-light flex items-center gap-3 text-[12px] ${
-                      isOverflow ? 'bg-[#fef2f2]' : ''
-                    } ${isSelectedForRemoval ? 'bg-[#fffbeb]' : ''}`}
+                      isOverflow ? 'bg-red-25' : ''
+                    } ${isSelectedForRemoval ? 'bg-yellow-25' : ''}`}
                   >
                     {/* Checkbox for removal selection */}
                     <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
@@ -93,7 +93,7 @@ export default function CascadePreview({
                         type="checkbox"
                         checked={isSelectedForRemoval}
                         onChange={() => onToggleRemoval(shift.lesson.id)}
-                        className="w-[14px] h-[14px] rounded cursor-pointer accent-[#f59e0b] flex-shrink-0"
+                        className="w-[14px] h-[14px] rounded cursor-pointer accent-yellow-700 flex-shrink-0"
                       />
                       <span
                         className={`font-medium truncate ${isSelectedForRemoval ? 'line-through text-text-muted' : 'text-text'}`}
@@ -107,7 +107,7 @@ export default function CascadePreview({
                       <span>{formatDate(shift.oldDate)}</span>
                       <span className="text-[10px]">→</span>
                       {isOverflow ? (
-                        <span className="text-[#dc2626] font-medium">No date</span>
+                        <span className="text-red-600 font-medium">No date</span>
                       ) : (
                         <span className="font-medium text-text">{formatDate(shift.newDate!)}</span>
                       )}
@@ -122,7 +122,7 @@ export default function CascadePreview({
 
       {/* Footer - removal help text */}
       {preview.shifts.length > 0 && (
-        <div className="bg-[#fffbeb] px-4 py-[8px] border-t border-border text-[11px] text-text-muted flex items-center gap-[6px]">
+        <div className="bg-yellow-25 px-4 py-[8px] border-t border-border text-[11px] text-text-muted flex items-center gap-[6px]">
           <span>☑️</span>
           <span>Check lessons to move them back to the Lesson Bank instead of rescheduling</span>
         </div>

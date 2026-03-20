@@ -6,8 +6,8 @@ export const COURSES: Record<string, Course> = {
     name: "Junior Seminar",
     gradeLevel: 11,
     lessonDuration: 50,
-    color: "#4f46e5",
-    unitColors: ["#4f46e5", "#6366f1", "#818cf8", "#a5b4fc"],
+    color: "#6760CC", // lavender-700
+    unitColors: ["#6760CC", "#8882E6", "#A9A4FF", "#CBC8FF"], // lavender-700, 600, 500, 300
     meetingDays: [1], // Monday
   },
   "fresh-sem": {
@@ -15,8 +15,8 @@ export const COURSES: Record<string, Course> = {
     name: "Freshman Seminar",
     gradeLevel: 9,
     lessonDuration: 50,
-    color: "#0d9488",
-    unitColors: ["#0d9488", "#14b8a6", "#2dd4bf", "#5eead4"],
+    color: "#0BA895", // green-700
+    unitColors: ["#0BA895", "#0EC7B4", "#2DE5D1", "#81EEE3"], // green-700, 600, 400, 100
     meetingDays: [2], // Tuesday
   },
   "ninth-adv": {
@@ -24,8 +24,8 @@ export const COURSES: Record<string, Course> = {
     name: "9th Advisory",
     gradeLevel: 9,
     lessonDuration: 30,
-    color: "#e11d48",
-    unitColors: ["#e11d48", "#f43f5e", "#fb7185", "#fda4af"],
+    color: "#C6345A", // red-600
+    unitColors: ["#C6345A", "#E5476F", "#FF8FB5", "#FFB3D0"], // red-600, 500, 300, 200
     meetingDays: [3], // Wednesday
   },
 };

@@ -62,10 +62,10 @@ export default function CourseToggle() {
                 ${
                   isActive
                     ? id === "junior-sem"
-                      ? "bg-junior-sem-light text-[#3730a3] border-junior-sem-chip"
+                      ? "bg-junior-sem-light text-lavender-900 border-junior-sem-chip"
                       : id === "fresh-sem"
-                        ? "bg-fresh-sem-light text-[#115e59] border-fresh-sem-chip"
-                        : "bg-ninth-adv-light text-[#9f1239] border-ninth-adv-chip"
+                        ? "bg-fresh-sem-light text-green-900 border-fresh-sem-chip"
+                        : "bg-ninth-adv-light text-red-900 border-ninth-adv-chip"
                     : "bg-surface text-text-muted border-border"
                 }
               `}

@@ -48,14 +48,14 @@ export default function LessonCard({
 
   const colorClasses = {
     "junior-sem": isSchoolCreated
-      ? "bg-[#eef2ff] border-l-[#818cf8] text-[#3730a3]"
-      : "bg-junior-sem-light border-l-junior-sem text-[#3730a3]",
+      ? "bg-lavender-100 border-l-lavender-500 text-lavender-900"
+      : "bg-junior-sem-light border-l-junior-sem text-lavender-900",
     "fresh-sem": isSchoolCreated
-      ? "bg-[#f0fdfa] border-l-[#2dd4bf] text-[#115e59]"
-      : "bg-fresh-sem-light border-l-fresh-sem text-[#115e59]",
+      ? "bg-green-100 border-l-green-400 text-green-900"
+      : "bg-fresh-sem-light border-l-fresh-sem text-green-900",
     "ninth-adv": isSchoolCreated
-      ? "bg-[#fff1f2] border-l-[#fb7185] text-[#9f1239]"
-      : "bg-ninth-adv-light border-l-ninth-adv text-[#9f1239]",
+      ? "bg-red-100 border-l-red-400 text-red-900"
+      : "bg-ninth-adv-light border-l-ninth-adv text-red-900",
   };
 
   const displayTitle = isSchoolCreated
