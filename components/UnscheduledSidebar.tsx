@@ -13,10 +13,14 @@ function DraggableLessonCard({ lessonId, children }: { lessonId: string; childre
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lessonId,
     disabled: currentRole !== 'admin',
+    // Require 8px of movement before drag activates, allowing clicks to work
+    activationConstraint: {
+      distance: 8,
+    },
   });
 
   const handleClick = (e: React.MouseEvent) => {
-    // If we're not dragging and not in the middle of a drag operation, open the detail panel
+    // If we're not dragging, open the detail panel
     if (!isDragging) {
       setSelectedLessonId(lessonId);
     }
