@@ -13,34 +13,30 @@ function DraggableLessonCard({ lessonId, children }: { lessonId: string; childre
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lessonId,
     disabled: currentRole !== 'admin',
-    activationConstraint: {
-      distance: 5, // Require 5px of movement before drag starts (allows clicks to work)
-    },
   });
 
-  const handleClick = (e: React.MouseEvent) => {
-    // Don't open panel if we're dragging
-    if (!isDragging) {
-      setSelectedLessonId(lessonId);
-    }
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    // Double-click to open detail panel (single click starts drag)
+    setSelectedLessonId(lessonId);
   };
 
   if (currentRole !== 'admin') {
-    // For non-admins, just make it clickable
+    // For non-admins, just make it clickable with single click
     return (
-      <div onClick={handleClick}>
+      <div onClick={() => setSelectedLessonId(lessonId)}>
         {children}
       </div>
     );
   }
 
-  // In the sidebar (lesson bank), the entire card should be draggable since that's the primary action
+  // In the sidebar (lesson bank), the entire card is draggable
+  // Double-click to view details, single drag to schedule
   return (
     <div
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       style={{ opacity: isDragging ? 0.4 : 1 }}
     >
       {children}
