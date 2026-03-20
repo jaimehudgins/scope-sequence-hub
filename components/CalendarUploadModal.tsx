@@ -218,7 +218,8 @@ export default function CalendarUploadModal({
     .filter((r) => r.action === "keep")
     .reduce(
       (acc, row) => {
-        acc[row.type] = (acc[row.type] || 0) + 1;
+        const type = row.type || "other";
+        acc[type] = (acc[type] || 0) + 1;
         return acc;
       },
       {} as Record<string, number>,
