@@ -26,28 +26,40 @@ function DraggableLessonCard({
     data: {
       lesson,
     },
-    // Require 8px of movement before drag activates, allowing clicks to work
-    activationConstraint: {
-      distance: 8,
-    },
   });
 
   const handleClick = (e: React.MouseEvent) => {
-    // If we're not dragging, open the detail panel
-    if (!isDragging) {
-      setSelectedLessonId(lessonId);
-    }
+    setSelectedLessonId(lessonId);
   };
 
+  if (currentRole !== "admin") {
+    // For non-admins, just make it clickable
+    return (
+      <div onClick={handleClick}>
+        <LessonCard lesson={lesson} context={context} isDraggable={false} />
+      </div>
+    );
+  }
+
+  // For admins, separate drag handle from clickable card
   return (
     <div
       ref={setNodeRef}
       {...attributes}
-      {...listeners}
-      onClick={handleClick}
-      style={{ opacity: isDragging ? 0.4 : 1 }}
+      style={{ opacity: isDragging ? 0.4 : 1, position: 'relative' }}
     >
-      <LessonCard lesson={lesson} context={context} isDraggable />
+      <div onClick={handleClick}>
+        <LessonCard lesson={lesson} context={context} isDraggable />
+      </div>
+      {/* Drag handle - only this area triggers drag */}
+      <div
+        {...listeners}
+        className="absolute top-0 left-0 w-[12px] h-full cursor-grab active:cursor-grabbing opacity-0 hover:opacity-100 transition-opacity"
+        style={{
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.1) 0%, transparent 100%)',
+        }}
+        title="Drag to reschedule"
+      />
     </div>
   );
 }
