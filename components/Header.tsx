@@ -11,6 +11,8 @@ export default function Header() {
     canRedo,
     undo,
     redo,
+    lessons,
+    courses,
   } = useCalendarContext();
 
   const handleRoleChange = (role: "admin" | "teacher") => {
@@ -20,6 +22,81 @@ export default function Header() {
     } else {
       addToast("🔒 Teacher mode — view only");
     }
+  };
+
+  const handleExportCSV = () => {
+    // Sort lessons by course and scheduled date
+    const sortedLessons = [...lessons].sort((a, b) => {
+      // First sort by course
+      const courseA = courses[a.courseId]?.name || a.courseId;
+      const courseB = courses[b.courseId]?.name || b.courseId;
+      if (courseA !== courseB) return courseA.localeCompare(courseB);
+
+      // Then by scheduled date (nulls at the end)
+      if (!a.scheduledDate && !b.scheduledDate) return 0;
+      if (!a.scheduledDate) return 1;
+      if (!b.scheduledDate) return -1;
+      return a.scheduledDate.localeCompare(b.scheduledDate);
+    });
+
+    // Create CSV header
+    const headers = [
+      'Course',
+      'Unit',
+      'Lesson Number',
+      'Lesson Title',
+      'Scheduled Date',
+      'Duration (min)',
+      'Type',
+      'Milestone',
+      'Description',
+      'Platform URL'
+    ];
+
+    // Create CSV rows
+    const rows = sortedLessons.map(lesson => {
+      const course = courses[lesson.courseId];
+      return [
+        course?.name || lesson.courseId,
+        lesson.unitName,
+        lesson.lessonNumber,
+        lesson.title || lesson.schoolCreatedTitle || '',
+        lesson.scheduledDate || 'Unscheduled',
+        lesson.duration,
+        lesson.type || 'curriculum',
+        lesson.isMilestone ? 'Yes' : 'No',
+        lesson.description || lesson.schoolCreatedDescription || '',
+        lesson.platformUrl || ''
+      ];
+    });
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row =>
+        row.map(cell => {
+          // Escape cells that contain commas, quotes, or newlines
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `scope-sequence-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    addToast('📊 Exported scope & sequence to CSV');
   };
 
   return (
@@ -33,6 +110,16 @@ export default function Header() {
         </div>
       </div>
       <div className="flex items-center gap-3">
+        {/* Export button */}
+        <button
+          onClick={handleExportCSV}
+          className="px-3 py-2 border border-border rounded-lg text-[13px] font-medium text-text-muted hover:bg-bg hover:text-text transition-all flex items-center gap-2"
+          title="Export to CSV"
+        >
+          <span>📊</span>
+          <span>Export CSV</span>
+        </button>
+
         {/* Undo/Redo buttons - only visible for admin when there's something to undo/redo */}
         {currentRole === "admin" && (canUndo || canRedo) && (
           <div className="flex items-center gap-1 mr-1">

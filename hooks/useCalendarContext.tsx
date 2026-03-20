@@ -70,6 +70,11 @@ type CalendarContextType = {
     endDate?: string,
   ) => void;
   closeDisruptionModal: () => void;
+
+  // Teacher absence modal
+  teacherAbsenceModal: { isOpen: boolean; targetDate: string } | null;
+  openTeacherAbsenceModal: (targetDate: string) => void;
+  closeTeacherAbsenceModal: () => void;
 };
 
 export type ToastMessage = {
@@ -121,6 +126,12 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   // Disruption modal
   const [disruptionModal, setDisruptionModal] =
     useState<DisruptionModalState>(null);
+
+  // Teacher absence modal
+  const [teacherAbsenceModal, setTeacherAbsenceModal] = useState<{
+    isOpen: boolean;
+    targetDate: string;
+  } | null>(null);
 
   const addToast = useCallback((message: string) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -229,6 +240,15 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setDisruptionModal(null);
   }, []);
 
+  // --- Teacher absence modal ---
+  const openTeacherAbsenceModal = useCallback((targetDate: string) => {
+    setTeacherAbsenceModal({ isOpen: true, targetDate });
+  }, []);
+
+  const closeTeacherAbsenceModal = useCallback(() => {
+    setTeacherAbsenceModal(null);
+  }, []);
+
   // --- Schedule overrides ---
   const addScheduleOverride = useCallback((override: ScheduleOverride) => {
     setScheduleOverrides((prev) => {
@@ -286,6 +306,11 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         disruptionModal,
         openDisruptionModal,
         closeDisruptionModal,
+
+        // Teacher absence modal
+        teacherAbsenceModal,
+        openTeacherAbsenceModal,
+        closeTeacherAbsenceModal,
       }}
     >
       {children}

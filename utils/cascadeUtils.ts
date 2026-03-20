@@ -36,13 +36,17 @@ export function isWeekend(date: Date): boolean {
 }
 
 /**
- * Returns true if the given date string appears in the non-instructional days array.
+ * Returns true if the given date string appears in the non-instructional days array
+ * AND should prevent lessons from being scheduled (i.e., shouldCascade !== false).
+ * Teacher absences with shouldCascade=false will NOT block lesson scheduling.
  */
 export function isNonInstructionalDate(
   dateStr: string,
   nonInstructionalDays: NonInstructionalDay[],
 ): boolean {
-  return nonInstructionalDays.some((nid) => nid.date === dateStr);
+  return nonInstructionalDays.some(
+    (nid) => nid.date === dateStr && nid.shouldCascade !== false,
+  );
 }
 
 /**

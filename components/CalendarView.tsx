@@ -5,6 +5,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { useDraggable } from "@dnd-kit/core";
 import LessonCard from "./LessonCard";
 import DayActionMenu from "./DayActionMenu";
+import TeacherAbsenceModal from "./TeacherAbsenceModal";
 import { isValidMeetingDate } from "@/utils/cascadeUtils";
 
 const dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -79,7 +80,10 @@ function DroppableDay({
   className?: string;
 }) {
   const { currentRole, nonInstructionalDays } = useCalendarContext();
-  const isNonInstructional = nonInstructionalDays.some((d) => d.date === date);
+  // Only block dropping if it's a real non-instructional day (not a teacher absence)
+  const isNonInstructional = nonInstructionalDays.some(
+    (d) => d.date === date && d.shouldCascade !== false
+  );
 
   const { setNodeRef, isOver } = useDroppable({
     id: date,
@@ -109,6 +113,9 @@ export default function CalendarView() {
     courses,
     currentRole,
     scheduleOverrides,
+    teacherAbsenceModal,
+    openTeacherAbsenceModal,
+    closeTeacherAbsenceModal,
   } = useCalendarContext();
 
   const today = new Date();
@@ -128,7 +135,8 @@ export default function CalendarView() {
   // Check if any active course meets on this date
   const hasMeetingDay = (ds: string, isWeekend: boolean) => {
     if (isWeekend) return false;
-    if (nonInstructionalDays.some((d) => d.date === ds)) return false;
+    // Only exclude real non-instructional days, not teacher absences
+    if (nonInstructionalDays.some((d) => d.date === ds && d.shouldCascade !== false)) return false;
     return Object.values(courses).some(
       (course) =>
         activeCourses.has(course.id) &&
@@ -183,7 +191,8 @@ export default function CalendarView() {
     }
 
     return (
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
+      <>
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
         <div className="grid grid-cols-7 gap-[1px] bg-border border border-border rounded-xl overflow-hidden">
           {dayNamesShort.map((day) => (
             <div
@@ -199,9 +208,15 @@ export default function CalendarView() {
             const dow = new Date(y, m, day).getDay();
             const isTodayCell = isToday(y, m, day);
             const isWeekend = dow === 0 || dow === 6;
-            const nonInstructionalDay = nonInstructionalDays.find(
-              (d) => d.date === ds,
+
+            // Separate teacher absences from regular non-instructional days
+            const teacherAbsences = nonInstructionalDays.filter(
+              (d) => d.date === ds && d.shouldCascade === false
             );
+            const nonInstructionalDay = nonInstructionalDays.find(
+              (d) => d.date === ds && d.shouldCascade !== false,
+            );
+
             const isMeeting = hasMeetingDay(ds, isWeekend);
             const override = getOverrideForDate(ds);
 
@@ -216,6 +231,7 @@ export default function CalendarView() {
             else if (isMeeting && isCurrentMonth)
               cellClasses += " bg-[#f5faf5]";
             if (isWeekend) cellClasses += " bg-[#fbfbf9]";
+            // Only apply non-instructional styling if it's NOT a teacher absence
             if (nonInstructionalDay) cellClasses += " non-instructional-day";
 
             return (
@@ -239,12 +255,35 @@ export default function CalendarView() {
                     >
                       {day}
                     </div>
+                    {/* Teacher absence indicator */}
+                    {teacherAbsences.length > 0 && (
+                      <div className="relative group/absence">
+                        <div className="text-[14px] cursor-help">
+                          👤
+                        </div>
+                        <div className="absolute left-0 top-full mt-1 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover/absence:opacity-100 transition-opacity pointer-events-none z-10">
+                          {teacherAbsences.map(a => a.teacherName || a.label).join(', ')}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {/* Day action menu - admin only, not on weekends or non-instructional days */}
                   {currentRole === "admin" &&
                     !isWeekend &&
                     !nonInstructionalDay &&
                     isCurrentMonth && <DayActionMenu date={ds} />}
+                  {/* Teacher absence button - teachers only, not on weekends */}
+                  {currentRole === "teacher" &&
+                    !isWeekend &&
+                    isCurrentMonth && (
+                      <button
+                        onClick={() => openTeacherAbsenceModal(ds)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-[16px] hover:scale-110"
+                        title="Mark absent"
+                      >
+                        📅
+                      </button>
+                    )}
                 </div>
                 {nonInstructionalDay && (
                   <div className="non-instructional-label">
@@ -270,7 +309,13 @@ export default function CalendarView() {
             );
           })}
         </div>
-      </div>
+        </div>
+        <TeacherAbsenceModal
+          isOpen={teacherAbsenceModal?.isOpen || false}
+          onClose={closeTeacherAbsenceModal}
+          initialDate={teacherAbsenceModal?.targetDate || ""}
+        />
+      </>
     );
   }
 
@@ -285,8 +330,9 @@ export default function CalendarView() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 pb-6">
-      <div className="grid grid-cols-5 gap-[1px] bg-border border border-border rounded-xl overflow-hidden">
+    <>
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="grid grid-cols-5 gap-[1px] bg-border border border-border rounded-xl overflow-hidden">
         {weekDays.map((d) => {
           const ds = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
           const isTodayCell = d.toDateString() === today.toDateString();
@@ -316,9 +362,15 @@ export default function CalendarView() {
 
         {weekDays.map((d) => {
           const ds = dateStr(d.getFullYear(), d.getMonth(), d.getDate());
-          const nonInstructionalDay = nonInstructionalDays.find(
-            (nd) => nd.date === ds,
+
+          // Separate teacher absences from regular non-instructional days
+          const teacherAbsences = nonInstructionalDays.filter(
+            (nd) => nd.date === ds && nd.shouldCascade === false
           );
+          const nonInstructionalDay = nonInstructionalDays.find(
+            (nd) => nd.date === ds && nd.shouldCascade !== false,
+          );
+
           const dayLessons = lessons.filter(
             (l) => l.scheduledDate === ds && activeCourses.has(l.courseId),
           );
@@ -326,6 +378,7 @@ export default function CalendarView() {
 
           let cellClasses =
             "bg-surface min-h-[400px] p-2 flex flex-col gap-1 transition-all relative group";
+          // Only apply non-instructional styling if it's NOT a teacher absence
           if (nonInstructionalDay) cellClasses += " non-instructional-day";
 
           return (
@@ -337,9 +390,30 @@ export default function CalendarView() {
             >
               <MeetingDayBars dateStr={ds} />
               <div className="flex items-center justify-between mb-1">
-                <div />
+                {/* Teacher absence indicator */}
+                {teacherAbsences.length > 0 && (
+                  <div className="relative group/absence">
+                    <div className="text-[16px] cursor-help">
+                      👤
+                    </div>
+                    <div className="absolute left-0 top-full mt-1 px-2 py-1 bg-gray-900 text-white text-[11px] rounded whitespace-nowrap opacity-0 group-hover/absence:opacity-100 transition-opacity pointer-events-none z-10">
+                      {teacherAbsences.map(a => a.teacherName || a.label).join(', ')}
+                    </div>
+                  </div>
+                )}
+                {teacherAbsences.length === 0 && <div />}
                 {currentRole === "admin" && !nonInstructionalDay && (
                   <DayActionMenu date={ds} />
+                )}
+                {/* Teacher absence button - teachers only */}
+                {currentRole === "teacher" && (
+                  <button
+                    onClick={() => openTeacherAbsenceModal(ds)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-[16px] hover:scale-110"
+                    title="Mark absent"
+                  >
+                    📅
+                  </button>
                 )}
               </div>
               {nonInstructionalDay && (
@@ -363,7 +437,13 @@ export default function CalendarView() {
             </DroppableDay>
           );
         })}
+        </div>
       </div>
-    </div>
+      <TeacherAbsenceModal
+        isOpen={teacherAbsenceModal?.isOpen || false}
+        onClose={closeTeacherAbsenceModal}
+        initialDate={teacherAbsenceModal?.targetDate || ""}
+      />
+    </>
   );
 }

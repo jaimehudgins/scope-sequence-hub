@@ -50,6 +50,8 @@ export type NonInstructionalDay = {
     | "sick"
     | "assembly"
     | "other";
+  teacherName?: string; // For teacher-specific absences
+  shouldCascade?: boolean; // If false, lessons won't shift (default: true)
 };
 
 export type ScheduleOverride = {
