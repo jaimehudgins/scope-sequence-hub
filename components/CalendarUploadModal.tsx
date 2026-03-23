@@ -41,8 +41,6 @@ export default function CalendarUploadModal({
   const [isDragging, setIsDragging] = useState(false);
   const [step, setStep] = useState<"upload" | "preview">("upload");
 
-  if (!isOpen) return null;
-
   const handleDownloadTemplateCSV = () => {
     const template = generate2026_27Template();
     const csv = generateTemplateCSV(template, true);
@@ -238,6 +236,8 @@ export default function CalendarUploadModal({
       },
       {} as Record<string, number>,
     );
+
+  if (!isOpen) return null;
 
   return (
     <div
