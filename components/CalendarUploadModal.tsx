@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useCalendarContext } from "@/hooks/useCalendarContext";
 import { NonInstructionalDay } from "@/types";
-import Papa from "papaparse";
+
 import {
   generate2026_27Template,
   generateTemplateCSV,
@@ -68,8 +68,9 @@ export default function CalendarUploadModal({
     for (const row of rawRows) {
       const date = row.Date || row.date || "";
       const label = row.Label || row.label || "";
-      const type =
-        (row.Type || row.type || "other") as NonInstructionalDay["type"];
+      const type = (row.Type ||
+        row.type ||
+        "other") as NonInstructionalDay["type"];
 
       // Skip rows with no date or comment rows
       if (!date || date.trim() === "" || String(date).startsWith("#")) continue;
@@ -96,7 +97,8 @@ export default function CalendarUploadModal({
   }, []);
 
   const parseCSV = useCallback(
-    (file: File) => {
+    async (file: File) => {
+      const Papa = (await import("papaparse")).default;
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
@@ -315,9 +317,7 @@ export default function CalendarUploadModal({
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
-                  onClick={() =>
-                    document.getElementById("csv-upload")?.click()
-                  }
+                  onClick={() => document.getElementById("csv-upload")?.click()}
                 >
                   <div className="text-[32px] mb-2">📤</div>
                   <div className="text-[14px] font-medium text-text mb-1">
@@ -405,7 +405,10 @@ export default function CalendarUploadModal({
                                 ? "keep"
                                 : "skip";
                               setImportData((prev) =>
-                                prev.map((row) => ({ ...row, action: newAction })),
+                                prev.map((row) => ({
+                                  ...row,
+                                  action: newAction,
+                                })),
                               );
                             }}
                             className="cursor-pointer"
@@ -463,9 +466,7 @@ export default function CalendarUploadModal({
                                 year: "numeric",
                               })}
                             </td>
-                            <td className="px-3 py-2 text-text">
-                              {row.label}
-                            </td>
+                            <td className="px-3 py-2 text-text">{row.label}</td>
                             <td className="px-3 py-2">
                               <span className="px-2 py-1 bg-neutral-50 rounded text-[11px] text-text-muted capitalize">
                                 {row.type}
@@ -473,9 +474,7 @@ export default function CalendarUploadModal({
                             </td>
                             <td className="px-3 py-2 text-[11px]">
                               {!row.isValid ? (
-                                <span className="text-red-600">
-                                  ⚠️ Invalid
-                                </span>
+                                <span className="text-red-600">⚠️ Invalid</span>
                               ) : isDuplicate ? (
                                 <span className="text-yellow-700">
                                   Duplicate
