@@ -1,4 +1,4 @@
-export type Role = "admin" | "curriculum_lead" | "teacher" | "counselor";
+export type Role = "admin" | "curriculum_lead" | "teacher" | "counselor" | "willow_admin";
 
 export type Course = {
   id: string;
@@ -39,6 +39,9 @@ export type Lesson = {
   teacherNoteFlagged?: boolean;
   teacherNoteAuthor?: string;
   teacherNoteDate?: string;
+  willowNote?: string;
+  willowNoteAuthor?: string;
+  willowNoteDate?: string;
 };
 
 export type NonInstructionalDay = {
@@ -65,6 +68,18 @@ export type ScheduleOverride = {
 };
 
 export type ViewMode = "month" | "week";
+
+export type WillowViewMode = "list" | "calendar";
+
+export type Partner = {
+  id: string;
+  name: string;
+  color: string;
+  location: string;
+  courses: Course[];
+  lessons: Lesson[];
+  nonInstructionalDays: NonInstructionalDay[];
+};
 
 export type CalendarSnapshot = {
   lessons: Lesson[];

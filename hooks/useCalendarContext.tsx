@@ -13,14 +13,17 @@ import {
   ScheduleOverride,
   Role,
   ViewMode,
+  WillowViewMode,
   CalendarSnapshot,
   DisruptionModalState,
   DisruptionModalMode,
   Course,
+  Partner,
 } from "@/types";
 import { mockLessons } from "@/data/mockLessons";
 import { mockHolidays } from "@/data/mockHolidays";
 import { COURSES as INITIAL_COURSES } from "@/data/mockCourses";
+import { mockPartners } from "@/data/mockPartners";
 
 const MAX_UNDO_STACK = 20;
 
@@ -80,6 +83,20 @@ type CalendarContextType = {
   calendarUploadModalOpen: boolean;
   openCalendarUploadModal: () => void;
   closeCalendarUploadModal: () => void;
+
+  // Willow Admin
+  willowViewMode: WillowViewMode;
+  setWillowViewMode: (mode: WillowViewMode) => void;
+  willowSchoolFilter: string[];
+  setWillowSchoolFilter: (ids: string[]) => void;
+  willowCourseFilter: string[];
+  setWillowCourseFilter: (names: string[]) => void;
+  willowDateRange: { start: string; end: string } | null;
+  setWillowDateRange: (range: { start: string; end: string } | null) => void;
+  partners: Partner[];
+  updateWillowNote: (partnerId: string, lessonId: string, note: string) => void;
+  willowLessonFilter: string | null;
+  setWillowLessonFilter: (title: string | null) => void;
 };
 
 export type ToastMessage = {
@@ -140,6 +157,14 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   // Calendar upload modal
   const [calendarUploadModalOpen, setCalendarUploadModalOpen] = useState(false);
+
+  // Willow Admin state
+  const [willowViewMode, setWillowViewMode] = useState<WillowViewMode>("list");
+  const [willowSchoolFilter, setWillowSchoolFilter] = useState<string[]>([]);
+  const [willowCourseFilter, setWillowCourseFilter] = useState<string[]>([]);
+  const [willowDateRange, setWillowDateRange] = useState<{ start: string; end: string } | null>(null);
+  const [partners, setPartners] = useState<Partner[]>(mockPartners);
+  const [willowLessonFilter, setWillowLessonFilter] = useState<string | null>(null);
 
   const addToast = useCallback((message: string) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -279,6 +304,34 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setScheduleOverrides((prev) => prev.filter((o) => o.date !== date));
   }, []);
 
+  // --- Willow Admin ---
+  const updateWillowNote = useCallback(
+    (partnerId: string, lessonId: string, note: string) => {
+      setPartners((prev) =>
+        prev.map((p) =>
+          p.id === partnerId
+            ? {
+                ...p,
+                lessons: p.lessons.map((l) =>
+                  l.id === lessonId
+                    ? {
+                        ...l,
+                        willowNote: note.trim() || undefined,
+                        willowNoteAuthor: note.trim() ? "Willow Admin" : undefined,
+                        willowNoteDate: note.trim()
+                          ? new Date().toISOString().split("T")[0]
+                          : undefined,
+                      }
+                    : l,
+                ),
+              }
+            : p,
+        ),
+      );
+    },
+    [],
+  );
+
   return (
     <CalendarContext.Provider
       value={{
@@ -333,6 +386,20 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         calendarUploadModalOpen,
         openCalendarUploadModal,
         closeCalendarUploadModal,
+
+        // Willow Admin
+        willowViewMode,
+        setWillowViewMode,
+        willowSchoolFilter,
+        setWillowSchoolFilter,
+        willowCourseFilter,
+        setWillowCourseFilter,
+        willowDateRange,
+        setWillowDateRange,
+        partners,
+        updateWillowNote,
+        willowLessonFilter,
+        setWillowLessonFilter,
       }}
     >
       {children}

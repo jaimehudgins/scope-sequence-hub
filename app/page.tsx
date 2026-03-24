@@ -18,6 +18,7 @@ import DisruptionModal from "@/components/DisruptionModal";
 import CalendarUploadModal from "@/components/CalendarUploadModal";
 import Toast from "@/components/Toast";
 import LessonCard from "@/components/LessonCard";
+import WillowAdminView from "@/components/willow/WillowAdminView";
 import { format } from "date-fns";
 import { isValidMeetingDate } from "@/utils/cascadeUtils";
 
@@ -119,6 +120,17 @@ export default function Home() {
   const activeDragLesson = activeDragId
     ? lessons.find((l) => l.id === activeDragId)
     : null;
+
+  // Willow Admin gets a completely separate view
+  if (currentRole === "willow_admin") {
+    return (
+      <div className="flex flex-col h-screen">
+        <Header />
+        <WillowAdminView />
+        <Toast />
+      </div>
+    );
+  }
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

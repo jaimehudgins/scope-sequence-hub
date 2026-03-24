@@ -16,10 +16,12 @@ export default function Header() {
     openCalendarUploadModal,
   } = useCalendarContext();
 
-  const handleRoleChange = (role: "admin" | "teacher") => {
+  const handleRoleChange = (role: "admin" | "teacher" | "willow_admin") => {
     setCurrentRole(role);
     if (role === "admin") {
       addToast("🔓 Admin mode — drag & drop enabled");
+    } else if (role === "willow_admin") {
+      addToast("🌿 Willow Admin — aggregate view across all schools");
     } else {
       addToast("🔒 Teacher mode — view only");
     }
@@ -123,15 +125,17 @@ export default function Header() {
           </button>
         )}
 
-        {/* Export button */}
-        <button
-          onClick={handleExportCSV}
-          className="px-3 py-2 border border-border rounded-lg text-[13px] font-medium text-text-muted hover:bg-bg hover:text-text transition-all flex items-center gap-2"
-          title="Export to CSV"
-        >
-          <span>📊</span>
-          <span>Export CSV</span>
-        </button>
+        {/* Export button - hidden for Willow Admin */}
+        {currentRole !== "willow_admin" && (
+          <button
+            onClick={handleExportCSV}
+            className="px-3 py-2 border border-border rounded-lg text-[13px] font-medium text-text-muted hover:bg-bg hover:text-text transition-all flex items-center gap-2"
+            title="Export to CSV"
+          >
+            <span>📊</span>
+            <span>Export CSV</span>
+          </button>
+        )}
 
         {/* Undo/Redo buttons - only visible for admin when there's something to undo/redo */}
         {currentRole === "admin" && (canUndo || canRedo) && (
@@ -185,6 +189,16 @@ export default function Header() {
             }`}
           >
             Teacher View
+          </button>
+          <button
+            onClick={() => handleRoleChange("willow_admin")}
+            className={`px-[14px] py-[6px] rounded-md border-none text-[13px] font-medium transition-all ${
+              currentRole === "willow_admin"
+                ? "bg-surface text-text shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                : "bg-transparent text-text-muted"
+            }`}
+          >
+            Willow Admin
           </button>
         </div>
       </div>
