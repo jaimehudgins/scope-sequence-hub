@@ -38,13 +38,25 @@ export default function WillowControls({ totalLessons }: WillowControlsProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const courseNames = getUniqueCourseNames(partners);
+  const courseNames = getUniqueCourseNames(partners, willowSchoolFilter);
+
+  // Clear course filters that are no longer available when school selection changes
+  useEffect(() => {
+    if (willowCourseFilter.length > 0) {
+      const valid = willowCourseFilter.filter((c) => courseNames.includes(c));
+      if (valid.length !== willowCourseFilter.length) {
+        setWillowCourseFilter(valid);
+      }
+    }
+  }, [courseNames.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleSchoolFilter = (id: string) => {
-    if (willowSchoolFilter.includes(id)) {
-      setWillowSchoolFilter(willowSchoolFilter.filter((s) => s !== id));
+    // Remove the "__none__" sentinel if present
+    const cleaned = willowSchoolFilter.filter((s) => s !== "__none__");
+    if (cleaned.includes(id)) {
+      setWillowSchoolFilter(cleaned.filter((s) => s !== id));
     } else {
-      setWillowSchoolFilter([...willowSchoolFilter, id]);
+      setWillowSchoolFilter([...cleaned, id]);
     }
   };
 
@@ -56,15 +68,16 @@ export default function WillowControls({ totalLessons }: WillowControlsProps) {
     }
   };
 
+  const realSchoolFilter = willowSchoolFilter.filter((s) => s !== "__none__");
   const activeSchoolCount =
-    willowSchoolFilter.length === 0
+    realSchoolFilter.length === 0
       ? partners.length
-      : willowSchoolFilter.length;
+      : realSchoolFilter.length;
 
   const schoolDropdownLabel =
-    willowSchoolFilter.length === 0
+    realSchoolFilter.length === 0
       ? `All Schools (${partners.length})`
-      : `${willowSchoolFilter.length} of ${partners.length} selected`;
+      : `${realSchoolFilter.length} of ${partners.length} selected`;
 
   return (
     <div className="bg-surface border-b border-border px-6 py-3 flex flex-col gap-3">

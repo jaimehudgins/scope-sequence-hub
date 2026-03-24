@@ -78,6 +78,41 @@ const courseConfigs: Record<
       },
     ],
   },
+  "tenth-adv": {
+    name: "10th Grade Advisory",
+    gradeLevel: 10,
+    duration: 30,
+    units: [
+      {
+        name: "Unit 1: Identity & Purpose",
+        lessons: [
+          "Who Am I Now?", "Strengths Revisited", "Core Values Deep Dive",
+          "Purpose Statement Draft", "Peer Feedback Circle", "Identity & Community",
+        ],
+      },
+      {
+        name: "Unit 2: Academic Ownership",
+        lessons: [
+          "Transcript Review", "Study Plan Design", "Test Prep Strategies",
+          "GPA Goal Setting", "Academic Recovery Plans", "Self-Advocacy Practice",
+        ],
+      },
+      {
+        name: "Unit 3: Leadership & Service",
+        lessons: [
+          "Leadership Styles", "Service Learning Intro", "Community Needs Assessment",
+          "Project Planning", "Reflection & Impact", "Presentation Prep",
+        ],
+      },
+      {
+        name: "Unit 4: Future Planning",
+        lessons: [
+          "Sophomore Year Reflection", "Summer Opportunities", "Mentorship Check-In",
+          "Skill Building Workshop", "Portfolio Review", "Year-End Celebration",
+        ],
+      },
+    ],
+  },
   "ninth-adv": {
     name: "9th Advisory",
     gradeLevel: 9,
@@ -140,11 +175,12 @@ const schoolConfigs = [
     name: "Riverside Academy",
     color: "#0BA895",
     location: "Evanston, IL",
-    courseIds: ["junior-sem", "fresh-sem"], // Only 2 courses
-    meetingDays: { "junior-sem": [2], "fresh-sem": [4] } as Record<string, number[]>, // Tue, Thu
+    courseIds: ["junior-sem", "fresh-sem", "tenth-adv"], // 3 courses, unique 10th Grade Advisory
+    meetingDays: { "junior-sem": [2], "fresh-sem": [4], "tenth-adv": [3] } as Record<string, number[]>, // Tue, Thu, Wed
     courseColors: {
       "junior-sem": { color: "#4F7CAC", unitColors: ["#4F7CAC", "#6B96C4", "#8DB1D9", "#B5CDE8"] },
       "fresh-sem": { color: "#E8871E", unitColors: ["#E8871E", "#F09D45", "#F5B673", "#FACE9F"] },
+      "tenth-adv": { color: "#7B68AE", unitColors: ["#7B68AE", "#9580C8", "#AF9CE0", "#C9B8F0"] },
     } as Record<string, { color: string; unitColors: string[] }>,
     startOffset: 1, // Starts Sep 9
     unscheduledRate: 0.25,

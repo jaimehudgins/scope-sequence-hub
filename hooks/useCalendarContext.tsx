@@ -95,6 +95,7 @@ type CalendarContextType = {
   setWillowDateRange: (range: { start: string; end: string } | null) => void;
   partners: Partner[];
   updateWillowNote: (partnerId: string, lessonId: string, note: string) => void;
+  updateWillowNoteForAll: (lessonTitle: string, note: string) => void;
   willowLessonFilter: string | null;
   setWillowLessonFilter: (title: string | null) => void;
 };
@@ -332,6 +333,29 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const updateWillowNoteForAll = useCallback(
+    (lessonTitle: string, note: string) => {
+      setPartners((prev) =>
+        prev.map((p) => ({
+          ...p,
+          lessons: p.lessons.map((l) =>
+            l.title === lessonTitle
+              ? {
+                  ...l,
+                  willowNote: note.trim() || undefined,
+                  willowNoteAuthor: note.trim() ? "Willow Admin" : undefined,
+                  willowNoteDate: note.trim()
+                    ? new Date().toISOString().split("T")[0]
+                    : undefined,
+                }
+              : l,
+          ),
+        })),
+      );
+    },
+    [],
+  );
+
   return (
     <CalendarContext.Provider
       value={{
@@ -398,6 +422,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         setWillowDateRange,
         partners,
         updateWillowNote,
+        updateWillowNoteForAll,
         willowLessonFilter,
         setWillowLessonFilter,
       }}

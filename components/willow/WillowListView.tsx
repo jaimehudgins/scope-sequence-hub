@@ -17,21 +17,35 @@ type WillowListViewProps = {
 function WillowNoteCell({
   partnerId,
   lessonId,
+  lessonTitle,
   currentNote,
 }: {
   partnerId: string;
   lessonId: string;
+  lessonTitle: string;
   currentNote?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(currentNote || "");
-  const { updateWillowNote } = useCalendarContext();
+  const [applyToAll, setApplyToAll] = useState(false);
+  const { updateWillowNote, updateWillowNoteForAll } = useCalendarContext();
+
+  const saveNote = () => {
+    if (applyToAll) {
+      updateWillowNoteForAll(lessonTitle, text);
+    } else {
+      updateWillowNote(partnerId, lessonId, text);
+    }
+    setEditing(false);
+    setApplyToAll(false);
+  };
 
   if (!editing) {
     return (
       <div
         onClick={() => {
           setText(currentNote || "");
+          setApplyToAll(false);
           setEditing(true);
         }}
         className="cursor-pointer min-h-[24px] px-2 py-1 rounded hover:bg-bg transition-colors"
@@ -46,27 +60,55 @@ function WillowNoteCell({
   }
 
   return (
-    <textarea
-      autoFocus
-      value={text}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={() => {
-        updateWillowNote(partnerId, lessonId, text);
-        setEditing(false);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          updateWillowNote(partnerId, lessonId, text);
-          setEditing(false);
-        }
-        if (e.key === "Escape") {
-          setEditing(false);
-        }
-      }}
-      className="w-full px-2 py-1 text-[12px] border border-border rounded bg-surface focus:outline-none focus:border-text-muted resize-none"
-      rows={2}
-    />
+    <div className="flex flex-col gap-1">
+      <textarea
+        autoFocus
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            saveNote();
+          }
+          if (e.key === "Escape") {
+            setEditing(false);
+            setApplyToAll(false);
+          }
+        }}
+        className="w-full px-2 py-1 text-[12px] border border-border rounded bg-surface focus:outline-none focus:border-text-muted resize-none"
+        rows={2}
+      />
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={applyToAll}
+            onChange={(e) => setApplyToAll(e.target.checked)}
+            className="w-3 h-3 rounded accent-blue-600"
+          />
+          <span className="text-[10px] text-text-muted">
+            Apply to all schools with this lesson
+          </span>
+        </label>
+        <div className="flex gap-1">
+          <button
+            onClick={() => {
+              setEditing(false);
+              setApplyToAll(false);
+            }}
+            className="text-[10px] text-text-muted hover:text-text px-1.5 py-0.5 rounded hover:bg-bg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={saveNote}
+            className="text-[10px] text-white bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded transition-colors font-medium"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -256,6 +298,7 @@ export default function WillowListView({ data }: WillowListViewProps) {
                 <WillowNoteCell
                   partnerId={row.partnerId}
                   lessonId={row.lesson.id}
+                  lessonTitle={row.lesson.title}
                   currentNote={row.lesson.willowNote}
                 />
               </div>

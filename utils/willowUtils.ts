@@ -99,10 +99,15 @@ export function sortWillowRows(
   });
 }
 
-// Get all unique course names across all partners
-export function getUniqueCourseNames(partners: Partner[]): string[] {
+// Get unique course names, optionally filtered to selected schools
+export function getUniqueCourseNames(
+  partners: Partner[],
+  schoolFilter?: string[],
+): string[] {
   const names = new Set<string>();
   for (const partner of partners) {
+    // If a school filter is active, only include courses from selected schools
+    if (schoolFilter && schoolFilter.length > 0 && !schoolFilter.includes(partner.id)) continue;
     for (const course of partner.courses) {
       names.add(course.name);
     }
