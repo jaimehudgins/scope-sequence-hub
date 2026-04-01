@@ -20,6 +20,10 @@ export default function LessonDetailPanel() {
     scheduleOverrides,
   } = useCalendarContext();
 
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [noteFlagged, setNoteFlagged] = useState(false);
+
   if (!selectedLessonId) return null;
 
   const lesson = lessons.find((l) => l.id === selectedLessonId);
@@ -27,12 +31,6 @@ export default function LessonDetailPanel() {
 
   const course = courses[lesson.courseId];
   const isSchoolCreated = lesson.type === "school-created";
-
-  const [isEditingNote, setIsEditingNote] = useState(false);
-  const [noteText, setNoteText] = useState(lesson.teacherNote || "");
-  const [noteFlagged, setNoteFlagged] = useState(
-    lesson.teacherNoteFlagged || false,
-  );
 
   const closePanel = () => {
     setSelectedLessonId(null);
@@ -295,7 +293,7 @@ export default function LessonDetailPanel() {
 
           {!isEditingNote && !lesson.teacherNote && (
             <button
-              onClick={() => setIsEditingNote(true)}
+              onClick={() => { setNoteText(lesson.teacherNote || ""); setNoteFlagged(lesson.teacherNoteFlagged || false); setIsEditingNote(true); }}
               className="w-full px-3 py-[10px] rounded-lg border border-dashed border-border text-[13px] text-text-muted hover:border-text-muted hover:text-text transition-colors cursor-pointer"
             >
               + Add a note for this lesson
@@ -327,7 +325,7 @@ export default function LessonDetailPanel() {
                     </button>
                   )}
                   <button
-                    onClick={() => setIsEditingNote(true)}
+                    onClick={() => { setNoteText(lesson.teacherNote || ""); setNoteFlagged(lesson.teacherNoteFlagged || false); setIsEditingNote(true); }}
                     className="text-[11px] text-blue-700 hover:underline cursor-pointer"
                   >
                     Edit
