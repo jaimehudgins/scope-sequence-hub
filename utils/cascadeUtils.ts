@@ -79,8 +79,37 @@ export function isMeetingDay(
 }
 
 /**
+ * Returns true if the given date falls on a Willow cadence day for the course.
+ * - "every": always true (default)
+ * - "everyOther": true on even weeks relative to the anchor date
+ * - "nthWeeks": true if the nth occurrence of the day-of-week in the month is included
+ */
+export function isWillowCadenceDay(dateStr: string, course: Course): boolean {
+  const cadence = course.willowCadence;
+  if (!cadence || cadence.type === "every") return true;
+
+  const date = stringToDate(dateStr);
+
+  if (cadence.type === "everyOther") {
+    const anchor = stringToDate(cadence.anchorDate);
+    const diffMs = date.getTime() - anchor.getTime();
+    const diffWeeks = Math.round(diffMs / (7 * 24 * 60 * 60 * 1000));
+    return diffWeeks % 2 === 0;
+  }
+
+  if (cadence.type === "nthWeeks") {
+    // nth occurrence of this day-of-week in the month (1-indexed)
+    const nthOccurrence = Math.ceil(date.getDate() / 7);
+    return cadence.weeks.includes(nthOccurrence);
+  }
+
+  return true;
+}
+
+/**
  * Returns true if the date is a valid meeting date for the course:
- * it must be a meeting day, not a weekend, and not a non-instructional day.
+ * it must be a meeting day, not a weekend, not a non-instructional day,
+ * and must fall on a Willow cadence day.
  */
 export function isValidMeetingDate(
   dateStr: string,
@@ -92,7 +121,8 @@ export function isValidMeetingDate(
   return (
     isMeetingDay(date, course, scheduleOverrides) &&
     !isWeekend(date) &&
-    !isNonInstructionalDate(dateStr, nonInstructionalDays)
+    !isNonInstructionalDate(dateStr, nonInstructionalDays) &&
+    isWillowCadenceDay(dateStr, course)
   );
 }
 

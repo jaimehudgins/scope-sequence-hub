@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCalendarContext } from "@/hooks/useCalendarContext";
 import { format } from "date-fns";
+import { isValidMeetingDate } from "@/utils/cascadeUtils";
 
 export default function LessonDetailPanel() {
   const {
@@ -15,6 +16,8 @@ export default function LessonDetailPanel() {
     courses,
     pushSnapshot,
     openDisruptionModal,
+    nonInstructionalDays,
+    scheduleOverrides,
   } = useCalendarContext();
 
   if (!selectedLessonId) return null;
@@ -186,9 +189,89 @@ export default function LessonDetailPanel() {
         </div>
 
         {/* Date */}
-        <div className="text-[13px] text-text-muted mb-6 flex items-center gap-[6px]">
-          📅 {dateDisplay}
+        <div className="text-[13px] text-text-muted mb-2 flex items-center gap-[6px]">
+          {lesson.scheduledDate ? `📅 ${dateDisplay}` : `📅 ${dateDisplay}`}
         </div>
+
+        {/* Quick schedule for unscheduled lessons */}
+        {!lesson.scheduledDate && currentRole === "admin" && course && (
+          <div className="mb-6 border border-border rounded-lg p-3 bg-bg">
+            <label className="text-[11px] font-semibold text-text-muted uppercase tracking-[0.8px] block mb-[6px]">
+              Schedule This Lesson
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                className="flex-1 px-3 py-[7px] rounded-lg border border-border text-[13px] text-text bg-surface focus:outline-none focus:border-text-muted transition-colors"
+                onChange={(e) => {
+                  const dateStr = e.target.value;
+                  if (!dateStr) return;
+
+                  // Validate it's a valid meeting date
+                  if (
+                    !isValidMeetingDate(
+                      dateStr,
+                      course,
+                      nonInstructionalDays,
+                      scheduleOverrides,
+                    )
+                  ) {
+                    const dayNames = [
+                      "Sunday", "Monday", "Tuesday", "Wednesday",
+                      "Thursday", "Friday", "Saturday",
+                    ];
+                    const targetDay =
+                      dayNames[new Date(dateStr + "T12:00:00").getDay()];
+                    const meetingDayNames = course.meetingDays
+                      .map((d) => dayNames[d])
+                      .join(", ");
+                    addToast(
+                      `Not a valid meeting day. ${course.name} meets: ${meetingDayNames} (selected ${targetDay})`,
+                    );
+                    return;
+                  }
+
+                  // Check for conflicts
+                  const conflict = lessons.find(
+                    (l) =>
+                      l.scheduledDate === dateStr &&
+                      l.courseId === lesson.courseId &&
+                      l.id !== lesson.id,
+                  );
+                  if (conflict) {
+                    addToast(
+                      `${course.name} already has a lesson on this date`,
+                    );
+                    return;
+                  }
+
+                  pushSnapshot(
+                    `Scheduled "${lesson.title}" for ${format(new Date(dateStr + "T12:00:00"), "MMM d")}`,
+                  );
+                  setLessons(
+                    lessons.map((l) =>
+                      l.id === lesson.id
+                        ? { ...l, scheduledDate: dateStr }
+                        : l,
+                    ),
+                  );
+                  addToast(
+                    `${lesson.title} scheduled for ${format(new Date(dateStr + "T12:00:00"), "MMM d, yyyy")}`,
+                  );
+                }}
+              />
+            </div>
+            <div className="text-[10px] text-text-muted mt-[5px]">
+              {(() => {
+                const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                const meetDays = course.meetingDays.map((d) => dayNames[d]).join(", ");
+                return `Meets: ${meetDays}`;
+              })()}
+            </div>
+          </div>
+        )}
+
+        {lesson.scheduledDate && <div className="mb-4" />}
 
         {/* Description */}
         <div className="text-[14px] leading-[1.65] text-text-muted mb-6">

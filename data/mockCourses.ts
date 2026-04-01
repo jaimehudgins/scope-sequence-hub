@@ -9,6 +9,7 @@ export const COURSES: Record<string, Course> = {
     color: "#6760CC", // lavender-700
     unitColors: ["#6760CC", "#8882E6", "#A9A4FF", "#CBC8FF"], // lavender-700, 600, 500, 300
     meetingDays: [1], // Monday
+    willowCadence: { type: "every" },
   },
   "fresh-sem": {
     id: "fresh-sem",
@@ -18,6 +19,7 @@ export const COURSES: Record<string, Course> = {
     color: "#0BA895", // green-700
     unitColors: ["#0BA895", "#0EC7B4", "#2DE5D1", "#81EEE3"], // green-700, 600, 400, 100
     meetingDays: [2], // Tuesday
+    willowCadence: { type: "every" },
   },
   "ninth-adv": {
     id: "ninth-adv",
@@ -27,6 +29,7 @@ export const COURSES: Record<string, Course> = {
     color: "#C6345A", // red-600
     unitColors: ["#C6345A", "#E5476F", "#FF8FB5", "#FFB3D0"], // red-600, 500, 300, 200
     meetingDays: [3], // Wednesday
+    willowCadence: { type: "every" },
   },
 };
 

@@ -1,4 +1,4 @@
-import { Partner, Course, Lesson, NonInstructionalDay } from "@/types";
+import { Partner, Course, Lesson, NonInstructionalDay, WillowCadence } from "@/types";
 
 // Shared lesson content per course (same curriculum across schools)
 const courseConfigs: Record<
@@ -159,6 +159,7 @@ const schoolConfigs = [
     location: "Chicago, IL",
     courseIds: ["junior-sem", "fresh-sem", "ninth-adv"],
     meetingDays: { "junior-sem": [1], "fresh-sem": [2], "ninth-adv": [3] } as Record<string, number[]>, // Mon, Tue, Wed
+    cadence: {} as Record<string, WillowCadence>, // all default to "every"
     courseColors: {
       "junior-sem": { color: "#6760CC", unitColors: ["#6760CC", "#8882E6", "#A9A4FF", "#CBC8FF"] },
       "fresh-sem": { color: "#0BA895", unitColors: ["#0BA895", "#0EC7B4", "#2DE5D1", "#81EEE3"] },
@@ -177,6 +178,9 @@ const schoolConfigs = [
     location: "Evanston, IL",
     courseIds: ["junior-sem", "fresh-sem", "tenth-adv"], // 3 courses, unique 10th Grade Advisory
     meetingDays: { "junior-sem": [2], "fresh-sem": [4], "tenth-adv": [3] } as Record<string, number[]>, // Tue, Thu, Wed
+    cadence: {
+      "fresh-sem": { type: "everyOther", anchorDate: "2025-09-11" }, // Willow every other Thursday
+    } as Record<string, WillowCadence>,
     courseColors: {
       "junior-sem": { color: "#4F7CAC", unitColors: ["#4F7CAC", "#6B96C4", "#8DB1D9", "#B5CDE8"] },
       "fresh-sem": { color: "#E8871E", unitColors: ["#E8871E", "#F09D45", "#F5B673", "#FACE9F"] },
@@ -196,6 +200,9 @@ const schoolConfigs = [
     location: "Oak Park, IL",
     courseIds: ["junior-sem", "fresh-sem", "ninth-adv"],
     meetingDays: { "junior-sem": [3], "fresh-sem": [1], "ninth-adv": [4] } as Record<string, number[]>, // Wed, Mon, Thu
+    cadence: {
+      "ninth-adv": { type: "nthWeeks", weeks: [1, 3] }, // Willow on 1st & 3rd Thursday of month
+    } as Record<string, WillowCadence>,
     courseColors: {
       "junior-sem": { color: "#7B5EA7", unitColors: ["#7B5EA7", "#9678C1", "#B196D6", "#CCB8E8"] },
       "fresh-sem": { color: "#2D8E6C", unitColors: ["#2D8E6C", "#3DA882", "#55C29B", "#7DDAB7"] },
@@ -279,6 +286,7 @@ function generateSchoolLessons(
   schoolId: string,
   schoolCourseIds: string[],
   meetingDays: Record<string, number[]>,
+  cadence: Record<string, WillowCadence>,
   schoolCourseColors: Record<string, { color: string; unitColors: string[] }>,
   startOffset: number,
   unscheduledRate: number,
@@ -301,6 +309,7 @@ function generateSchoolLessons(
       color: colors?.color || "#888",
       unitColors: colors?.unitColors || [],
       meetingDays: meetingDays[baseCourseId] || [1],
+      willowCadence: cadence[baseCourseId] || { type: "every" },
     });
 
     // Start date calculation
@@ -382,6 +391,7 @@ function generatePartners(): Partner[] {
       school.id,
       school.courseIds,
       school.meetingDays,
+      school.cadence,
       school.courseColors,
       school.startOffset,
       school.unscheduledRate,

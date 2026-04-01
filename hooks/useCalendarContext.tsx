@@ -14,6 +14,7 @@ import {
   Role,
   ViewMode,
   WillowViewMode,
+  WillowCadence,
   CalendarSnapshot,
   DisruptionModalState,
   DisruptionModalMode,
@@ -57,6 +58,7 @@ type CalendarContextType = {
   // Course schedule management
   courses: Record<string, Course>;
   updateCourseMeetingDays: (courseId: string, meetingDays: number[]) => void;
+  updateCourseCadence: (courseId: string, cadence: WillowCadence) => void;
 
   // Undo/Redo
   canUndo: boolean;
@@ -137,6 +139,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         ...course,
         meetingDays: [...course.meetingDays],
         unitColors: [...course.unitColors],
+        willowCadence: course.willowCadence
+          ? { ...course.willowCadence }
+          : { type: "every" },
       };
     }
     return copy;
@@ -183,6 +188,19 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         return {
           ...prev,
           [courseId]: { ...prev[courseId], meetingDays: [...meetingDays] },
+        };
+      });
+    },
+    [],
+  );
+
+  const updateCourseCadence = useCallback(
+    (courseId: string, cadence: WillowCadence) => {
+      setCourses((prev) => {
+        if (!prev[courseId]) return prev;
+        return {
+          ...prev,
+          [courseId]: { ...prev[courseId], willowCadence: cadence },
         };
       });
     },
@@ -388,6 +406,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
         // Course schedule management
         courses,
         updateCourseMeetingDays,
+        updateCourseCadence,
 
         // Undo/Redo
         canUndo: undoStack.length > 0,

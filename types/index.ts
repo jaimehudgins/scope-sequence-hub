@@ -8,6 +8,7 @@ export type Course = {
   color: string;
   unitColors: string[];
   meetingDays: number[]; // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  willowCadence?: WillowCadence;
 };
 
 export type Unit = {
@@ -66,6 +67,11 @@ export type ScheduleOverride = {
   runsAsDayOfWeek: number; // Which day-of-week schedule to follow (0=Sun..6=Sat)
   label?: string; // e.g. "Wed schedule"
 };
+
+export type WillowCadence =
+  | { type: "every" }
+  | { type: "everyOther"; anchorDate: string }
+  | { type: "nthWeeks"; weeks: number[] }; // 1-indexed: [1,3] = 1st & 3rd occurrence of meeting day in month
 
 export type ViewMode = "month" | "week";
 
